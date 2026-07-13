@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programa Afinar · App de Mentoria · hit.hammers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0a;
+    --bg-soft:#141414;
+    --bg-card:#1a1a1a;
+    --line:#2a2a2a;
+    --lime:#c4e01a;
+    --lime-dim:#9db315;
+    --carmim:#d0104a;
+    --white:#f4f4f2;
+    --grey:#8a8a8a;
+    --grey-soft:#b8b8b8;
+    --maxw:1080px;
+    --maxw-wide:1320px;
+    --font-head:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--white);
+    font-family:var(--font-head);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .wrap-wide{max-width:var(--maxw-wide)}
+  .wrap-hub{max-width:1680px}
+  [hidden]{display:none!important}
+  /* rótulos em fonte mono (padrão do pôster de referência) */
+  .logo,.eyebrow,.sec-eyebrow,.fl-lbl,.hero-meta .lbl,.pb-cycle,.mentor-bars-head,.mb-pct,.cr-cargo,.pill{font-family:var(--font-mono)}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:70vh;
+    display:flex;flex-direction:column;justify-content:center;
+    padding:70px 0 60px;
+    background:
+      radial-gradient(120% 90% at 78% 18%, rgba(196,224,26,.08), transparent 55%),
+      radial-gradient(100% 80% at 12% 90%, rgba(208,16,74,.10), transparent 55%),
+      var(--bg);
+    border-bottom:1px solid var(--line);
+    position:relative;overflow:hidden;
+  }
+  .logo{font-size:.82rem;letter-spacing:.32em;text-transform:uppercase;color:var(--grey);margin-bottom:auto;font-weight:600}
+  .logo b{color:var(--white)}
+  .logo .dot{color:var(--lime)}
+  .eyebrow{display:inline-block;font-size:.74rem;letter-spacing:.28em;text-transform:uppercase;color:var(--lime);font-weight:700;margin-bottom:22px}
+  h1.hero-title{font-size:clamp(2.4rem,7vw,5rem);line-height:.98;font-weight:800;letter-spacing:-.02em;margin-bottom:26px}
+  h1.hero-title .lime{color:var(--lime)}
+  .hero-lead{font-size:clamp(1.05rem,2.1vw,1.35rem);color:var(--grey-soft);max-width:640px;font-weight:300}
+  .hero-lead em{color:var(--white);font-style:italic}
+  .hero-meta{margin-top:44px;display:flex;gap:38px;flex-wrap:wrap;padding-top:28px;border-top:1px solid var(--line)}
+  .hero-meta div{min-width:90px}
+  .hero-meta .num{font-size:2rem;font-weight:800;color:var(--lime);line-height:1}
+  .hero-meta .lbl{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);margin-top:6px}
+
+  /* ---------- SECTIONS ---------- */
+  section.block{padding:64px 0;border-bottom:1px solid var(--line)}
+  .sec-eyebrow{font-size:.72rem;letter-spacing:.26em;text-transform:uppercase;color:var(--carmim);font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+  .sec-eyebrow::before{content:"";width:26px;height:2px;background:var(--carmim);display:inline-block}
+  h2{font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.08;font-weight:800;letter-spacing:-.015em;margin-bottom:20px}
+  h2 .lime{color:var(--lime)}
+  h3{font-size:1.28rem;font-weight:700;margin:34px 0 12px;letter-spacing:-.01em}
+  h3 .idx{color:var(--lime);font-weight:800;margin-right:8px}
+  p.body{color:var(--grey-soft);margin-bottom:16px;font-weight:300;max-width:none}
+  p.body strong{color:var(--white);font-weight:600}
+  .lead-note{border-left:2px solid var(--lime);padding:2px 0 2px 22px;margin:22px 0;color:var(--white);font-size:1.05rem;font-style:italic;font-weight:300;max-width:720px}
+
+  /* ---------- SUPORTE OPERACIONAL (fora da mentoria) ---------- */
+  .ops-warning{border:1px solid var(--carmim);background:rgba(208,16,74,.08);border-radius:10px;padding:18px 22px;margin-top:20px}
+  .ops-warning h3{margin-top:0}
+  .badge-carmim{display:inline-block;color:var(--carmim);font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-left:10px;vertical-align:middle}
+
+  /* ---------- BOTÃO IR PARA AVALIAÇÃO ---------- */
+  .jump-eval{
+    position:fixed;top:20px;right:20px;z-index:200;
+    background:var(--lime);color:#0a0a0a;font-size:.78rem;font-weight:800;
+    padding:11px 20px;border-radius:8px;text-decoration:none;letter-spacing:.02em;
+    display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 18px rgba(0,0,0,.35);
+    transition:transform .1s ease,opacity .2s ease,visibility .2s ease;border:none;cursor:pointer;font-family:inherit;
+  }
+  .jump-eval:hover{transform:translateY(-1px);opacity:.88}
+  .jump-eval.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+
+  /* ---------- DESTAQUE DA ESCALA (antes das tabelas) ---------- */
+  .scale-highlight{background:var(--bg-soft);border:2px solid var(--lime);border-radius:14px;padding:26px 28px 22px;margin:28px 0 8px}
+  .scale-highlight .sh-title{font-size:1.05rem;font-weight:800;color:var(--lime);margin-bottom:16px;letter-spacing:.01em;display:flex;align-items:center;gap:10px}
+  .scale-highlight .sh-title::before{content:"i";width:22px;height:22px;border-radius:50%;background:var(--lime);color:#0a0a0a;display:inline-flex;align-items:center;justify-content:center;font-size:.82rem;font-style:italic;font-weight:800;flex-shrink:0}
+  .scale-highlight .scale{margin:0}
+  .scale-highlight .scale-cell{background:var(--bg-card);border-color:var(--lime-dim);padding:18px 16px}
+  .scale-highlight .scale-cell .lv{font-size:2.1rem}
+  .scale-highlight .scale-cell .nm{font-size:.92rem}
+
+  /* ---------- ALERTA DE PREENCHIMENTO ---------- */
+  .form-alert{background:rgba(208,16,74,.10);border:1px solid var(--carmim);border-radius:10px;padding:14px 18px;color:var(--white);font-size:.9rem;font-weight:600;line-height:1.5}
+  .form-alert b{color:var(--carmim)}
+  .form-alert.ok{background:rgba(196,224,26,.10);border-color:var(--lime)}
+  .form-alert.ok b{color:var(--lime)}
+
+  /* ---------- METAPHOR STRIP ---------- */
+  .metaphor{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:34px 32px;margin:26px 0;display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  .metaphor .side{border-left:3px solid var(--carmim);padding-left:18px}
+  .metaphor .side.on{border-left-color:var(--lime)}
+  .metaphor .side.carmim-side small{color:var(--carmim)}
+  .metaphor .side small{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--grey);display:block;margin-bottom:6px}
+  .metaphor .side p{color:var(--white);font-weight:600;font-size:1.05rem}
+
+  /* ---------- ROLES ---------- */
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px}
+  .role-card{background:var(--bg-card);border:1px solid var(--line);border-radius:14px;padding:28px 26px;position:relative;overflow:hidden}
+  .role-card::after{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:var(--lime)}
+  .role-card.carmim::after{background:var(--carmim)}
+  .role-tag{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--grey);margin-bottom:6px}
+  .role-name{font-size:1.35rem;font-weight:800;margin-bottom:4px}
+  .role-editable{color:var(--lime);font-size:.86rem;font-weight:600;margin-bottom:16px}
+  .role-editable.carmim{color:var(--carmim)}
+  .role-card ul{list-style:none;margin-top:8px}
+  .role-card li{color:var(--grey-soft);font-size:.94rem;padding:7px 0 7px 20px;position:relative;font-weight:300;border-top:1px solid var(--line)}
+  .role-card li:first-child{border-top:none}
+  .role-card li::before{content:"";position:absolute;left:0;top:15px;width:7px;height:7px;background:var(--lime);border-radius:50%}
+  .role-card.carmim li::before{background:var(--carmim)}
+
+  /* ---------- SESSION FLOW ---------- */
+  .flow{margin-top:28px;counter-reset:step}
+  .flow-step{display:grid;grid-template-columns:64px 1fr 78px;gap:20px;align-items:start;padding:20px 0;border-top:1px solid var(--line)}
+  .flow-step:first-child{border-top:none}
+  .flow-num{counter-increment:step;font-size:1.5rem;font-weight:800;color:var(--lime)}
+  .flow-num::before{content:counter(step,decimal-leading-zero)}
+  .flow-body h4{font-size:1.05rem;font-weight:700;margin-bottom:5px}
+  .flow-body p{color:var(--grey-soft);font-size:.92rem;font-weight:300}
+  .flow-time{text-align:right;font-size:.82rem;font-weight:700;color:var(--white);background:var(--bg-soft);border:1px solid var(--line);border-radius:20px;padding:5px 0}
+
+  /* ---------- COMPETENCY SCALE ---------- */
+  .scale{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
+  .scale-cell{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:16px 14px}
+  .scale-cell .lv{font-size:1.6rem;font-weight:800;color:var(--lime);line-height:1}
+  .scale-cell .nm{font-size:.86rem;font-weight:700;margin:6px 0 4px}
+  .scale-cell .ds{font-size:.8rem;color:var(--grey);font-weight:300;line-height:1.4}
+
+  /* ---------- PDI GRID ---------- */
+  .pdi{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+  .pdi-col{background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:20px}
+  .pdi-col .pct{font-size:1.8rem;font-weight:800;color:var(--lime);line-height:1}
+  .pdi-col .pt{font-size:.95rem;font-weight:700;margin:6px 0 8px}
+  .pdi-col p{font-size:.85rem;color:var(--grey-soft);font-weight:300}
+
+  /* ---------- DIVISOR DE PARTE ---------- */
+  .part-divider{padding:60px 0 10px;border-bottom:1px solid var(--line);background:radial-gradient(120% 90% at 78% 30%, rgba(196,224,26,.06), transparent 55%),var(--bg)}
+  .part-divider .pd-eyebrow{font-size:.74rem;letter-spacing:.3em;text-transform:uppercase;color:var(--lime);font-weight:700;margin-bottom:16px}
+  .part-divider h2{font-size:clamp(2rem,5vw,3.2rem);margin-bottom:14px}
+  .part-divider p{color:var(--grey-soft);font-weight:300;max-width:680px}
+
+  /* ---------- FORM CONTROLS ---------- */
+  .tool{padding:52px 0;border-bottom:1px solid var(--line)}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);font-weight:600}
+  .field input,.field select,.field textarea{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;color:var(--white);padding:11px 13px;font-size:.95rem;font-family:inherit}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--lime);border-color:var(--lime)}
+  /* mantém o picker nativo escuro (texto legível) e troca o ícone por verde neon */
+  .field input[type=date],.field input[type=time]{color-scheme:dark}
+  .field input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:1;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c4e01a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:contain}
+  .field input[type=time]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:1;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c4e01a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolyline points='12 7 12 12 15 14'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:contain}
+  .field textarea{resize:vertical;min-height:70px;line-height:1.5}
+  input:read-only,textarea:read-only{opacity:.72;cursor:default}
+  select:disabled{opacity:.72;cursor:default}
+  .lock-tag{display:inline-block;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--grey);border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin-left:10px;vertical-align:middle}
+
+  /* matriz */
+  .matrix-block{margin-top:30px}
+  .matrix-axis-title{font-size:1.1rem;font-weight:800;color:var(--white);margin:26px 0 4px;display:flex;align-items:center;gap:10px}
+  .matrix-axis-title span{width:9px;height:9px;background:var(--carmim);border-radius:2px;transform:rotate(45deg)}
+  table.matrix{width:100%;border-collapse:collapse;margin-top:12px;font-size:.9rem}
+  table.matrix th{background:var(--bg-soft);color:var(--grey);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;padding:10px 8px;border:1px solid var(--line);font-weight:600;text-align:center}
+  table.matrix th.comp{text-align:left;width:44%}
+  table.matrix td{border:1px solid var(--line);padding:8px;vertical-align:middle}
+  table.matrix td.comp{color:var(--grey-soft);font-weight:300;font-size:.9rem}
+  table.matrix select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--white);border-radius:6px;padding:7px 6px;font-family:inherit;font-size:.9rem;text-align:center}
+  table.matrix td.gapcell{text-align:center;font-weight:800;font-size:1rem}
+  .gap-0{color:var(--grey)}
+  .gap-pos{color:var(--lime)}
+  .gap-neg{color:var(--carmim)}
+  .axis-summary{display:flex;gap:24px;flex-wrap:wrap;margin-top:12px;padding:12px 16px;background:var(--bg-soft);border:1px solid var(--line);border-radius:8px}
+  .axis-summary div{font-size:.82rem;color:var(--grey)}
+  .axis-summary div b{color:var(--white);font-size:1.05rem;font-weight:800;display:block}
+  .gap-legend{display:flex;gap:20px;flex-wrap:wrap;margin-top:16px;font-size:.82rem;color:var(--grey)}
+  .gap-legend span{display:inline-flex;align-items:center;gap:7px}
+  .gap-legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+  /* botões */
+  .btn{border:none;border-radius:8px;padding:12px 22px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.02em;transition:transform .1s ease,opacity .15s ease}
+  .btn:hover{transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  .btn-primary{background:var(--lime);color:#0a0a0a}
+  .btn-ghost{background:transparent;color:var(--white);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--lime);color:var(--lime)}
+  .btn-danger{background:var(--carmim);color:#fff}
+  .btn.sm{padding:7px 14px;font-size:.78rem}
+  .btn.sm.danger{color:var(--carmim);border-color:rgba(208,16,74,.4)}
+  .btn.sm.danger:hover{border-color:var(--carmim)}
+  .icon-btn{padding:9px 13px;font-size:1.05rem;line-height:1}
+
+  /* pdi dynamic rows */
+  .goal-row{display:grid;grid-template-columns:1fr 130px 36px;gap:10px;margin-bottom:10px;align-items:end}
+  .goal-row .rm{background:transparent;border:1px solid var(--line);color:var(--carmim);border-radius:7px;cursor:pointer;height:44px;font-size:1.1rem;font-weight:700}
+  .goal-row .rm:hover{border-color:var(--carmim)}
+  .add-link{background:transparent;border:1px dashed var(--line);color:var(--lime);border-radius:8px;padding:10px 16px;cursor:pointer;font-family:inherit;font-weight:600;font-size:.86rem;margin-top:4px}
+  .add-link:hover{border-color:var(--lime)}
+  .pdi-70{border-left:3px solid var(--lime)}
+  .pdi-20{border-left:3px solid var(--carmim)}
+  .pdi-10{border-left:3px solid var(--grey)}
+  .pdi-plan-block{background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:14px}
+  .pdi-plan-block .pb-head{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:10px}
+  .pb-70{color:var(--lime)} .pb-20{color:var(--carmim)} .pb-10{color:var(--grey-soft)}
+
+  /* roteiro / accordion */
+  .grow-step{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  .grow-step summary{padding:18px 22px;cursor:pointer;font-weight:700;font-size:1.05rem;list-style:none;display:flex;align-items:center;gap:14px}
+  .grow-step summary::-webkit-details-marker{display:none}
+  .grow-step summary .letter{width:34px;height:34px;flex-shrink:0;border-radius:8px;background:var(--lime);color:#0a0a0a;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+  .grow-step summary .st{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);font-weight:600;display:block;margin-top:2px}
+  .grow-step[open] summary{border-bottom:1px solid var(--line)}
+  .grow-body{padding:18px 22px 22px 70px}
+  .grow-body ul{list-style:none;margin:0 0 14px}
+  .grow-body li{color:var(--grey-soft);font-weight:300;padding:6px 0 6px 18px;position:relative;font-size:.94rem}
+  .grow-body li::before{content:"›";position:absolute;left:0;color:var(--lime);font-weight:700}
+  .grow-body textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--white);padding:10px 12px;font-family:inherit;font-size:.92rem;resize:vertical;min-height:60px}
+
+  /* ---------- LOGIN ---------- */
+  #screen-login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;position:relative;overflow:hidden;background:radial-gradient(120% 90% at 80% 12%, rgba(196,224,26,.10), transparent 55%),radial-gradient(100% 80% at 10% 92%, rgba(208,16,74,.12), transparent 55%),var(--bg)}
+  #screen-login::before{content:"";position:absolute;inset:0;background:url('assets/imagens/fundo.png') center/cover no-repeat;opacity:.21;pointer-events:none}
+  .login-card{width:100%;max-width:460px;background:var(--bg-soft);border:1px solid var(--line);border-radius:18px;padding:40px 36px;position:relative;overflow:hidden}
+  .login-card::after{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:var(--lime)}
+  .login-logo{font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;color:var(--grey);font-weight:600;margin-bottom:8px}
+  .login-logo b{color:var(--white)} .login-logo .dot{color:var(--lime)}
+  .login-card h1{font-size:2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+  .login-card h1 .lime{color:var(--lime)}
+  .login-sub{color:var(--grey-soft);font-weight:300;font-size:.95rem;margin-bottom:28px}
+  .role-toggle{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+  .role-btn{background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:18px 14px;cursor:pointer;text-align:center;font-family:inherit;color:var(--grey-soft);transition:.15s}
+  .role-btn .rb-t{font-size:1.05rem;font-weight:800;color:var(--white);display:block;margin-bottom:2px}
+  .role-btn .rb-d{font-size:.78rem;font-weight:300}
+  .role-btn:hover{border-color:var(--lime-dim)}
+  .role-btn.active{border-color:var(--lime);background:rgba(196,224,26,.06)}
+  .role-btn.active .rb-t{color:var(--lime)}
+  .login-panel{margin-top:6px}
+  .login-error{color:var(--carmim);font-size:.85rem;font-weight:600;margin-top:12px;min-height:1.1em}
+  .login-foot{margin-top:26px;font-size:.76rem;color:var(--grey);font-weight:300;line-height:1.5}
+
+  /* ---------- APP BAR ---------- */
+  .appbar{position:sticky;top:0;z-index:40;background:rgba(10,10,10,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .appbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:12px;padding-bottom:12px}
+  .appbar .who{font-size:.9rem;color:var(--grey-soft)}
+  .appbar .who b{color:var(--white)}
+  .appbar .who .pill{display:inline-block;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--lime);border:1px solid var(--lime-dim);border-radius:20px;padding:2px 10px;margin-left:8px}
+  .appbar .who .pill.g{color:var(--carmim);border-color:var(--carmim)}
+  .appbar-actions{display:flex;gap:10px;align-items:center}
+  .appbar .btn{padding:9px 16px;font-size:.82rem}
+
+  /* ---------- PERIOD BAR ---------- */
+  .period-bar{background:var(--bg-soft);border-bottom:1px solid var(--line)}
+  .period-bar .wrap{padding-top:12px;padding-bottom:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .pb-cycle{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:#0a0a0a;background:var(--lime);border-radius:20px;padding:4px 14px}
+  .pb-month{font-size:1rem;font-weight:700;color:var(--white)}
+
+  /* ---------- SAVE BAR ---------- */
+  .savebar{position:sticky;bottom:0;z-index:40;background:rgba(10,10,10,.9);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+  .savebar .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:14px;padding-bottom:14px}
+  .savebar .status{font-size:.84rem;color:var(--grey)}
+  .savebar .status b{color:var(--lime)}
+
+  /* ---------- PAINEL DO GESTOR ---------- */
+  #screen-gestor,#screen-hub,#screen-settings{padding:0 0 80px}
+  .gest-head{padding:40px 0 26px;border-bottom:1px solid var(--line);background:radial-gradient(120% 90% at 82% 20%, rgba(196,224,26,.07), transparent 55%),var(--bg)}
+  .gest-head h2{margin-bottom:6px}
+  .gest-head p{color:var(--grey-soft);font-weight:300}
+  .filter-row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:22px}
+  .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .filter-bar .fl-lbl{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);font-weight:600;margin-right:4px}
+  .chip{background:var(--bg-card);border:1px solid var(--line);border-radius:20px;padding:8px 18px;cursor:pointer;font-family:inherit;font-weight:600;font-size:.86rem;color:var(--grey-soft);transition:.15s}
+  .chip:hover{border-color:var(--lime-dim)}
+  .chip.active{border-color:var(--lime);color:var(--lime);background:rgba(196,224,26,.06)}
+  .cal-nav-btn{display:inline-flex;align-items:center;gap:9px;background:var(--bg-card);border:1px solid var(--lime-dim);color:var(--lime);border-radius:20px;padding:8px 18px 8px 14px;font-family:inherit;font-weight:700;font-size:.86rem;cursor:pointer}
+  .cal-nav-btn svg{width:16px;height:16px}
+  .cal-nav-btn:hover{border-color:var(--lime);background:rgba(196,224,26,.1)}
+
+  /* barras de mentor */
+  .mentor-bars-box{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-top:32px}
+  .mentor-bars-head{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);font-weight:700;margin-bottom:16px}
+  .meet-bar-row{display:grid;grid-template-columns:60px 1fr 150px;gap:14px;align-items:center;margin-bottom:12px}
+  .meet-bar-row:last-child{margin-bottom:0}
+  .mb-name{font-weight:800;font-size:.94rem}
+  .mb-track{height:10px;background:var(--bg-card);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .mb-fill{height:100%;background:var(--carmim);border-radius:6px}
+  .mb-fill.ok{background:var(--lime)}
+  .mb-pct{font-size:.82rem;color:var(--grey-soft);text-align:right}
+
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;margin-top:22px}
+  .fcard{background:var(--bg-card);border:1px solid var(--line);border-radius:18px;padding:0;cursor:pointer;position:relative;overflow:hidden;transition:.18s ease;text-align:left;font-family:inherit;color:inherit;display:flex;flex-direction:column}
+  .fcard:hover{transform:translateY(-4px);border-color:var(--lime-dim);box-shadow:0 16px 34px rgba(0,0,0,.38)}
+  .fcard:hover .fc-photo::after{opacity:1}
+  .fc-photo{aspect-ratio:9/10;background:linear-gradient(160deg,var(--bg-soft),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line);position:relative;overflow:hidden;color:var(--grey)}
+  .fc-photo svg{width:34%;height:34%;opacity:.3}
+  .fc-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .fc-photo::after{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:var(--lime);opacity:.55;transition:.18s;z-index:1}
+  .fc-info{padding:13px 16px 14px;display:flex;flex-direction:column;flex:1}
+  .fc-name{font-size:1.08rem;font-weight:800;margin-bottom:1px;letter-spacing:-.01em;line-height:1.15}
+  .fc-func{font-size:.74rem;color:var(--grey);font-weight:300;margin-bottom:8px;min-height:1.1em;line-height:1.2}
+  .fc-mentor{font-size:.72rem;color:var(--grey-soft);font-weight:300;margin-top:auto;line-height:1.3}
+  .fc-mentor b{color:var(--white);font-weight:600}
+  .fc-meet{margin-top:3px;font-size:.74rem;font-weight:700;color:var(--grey);line-height:1.3}
+  .fc-meet.ok{color:var(--lime)}
+  .fc-meet.low{color:var(--carmim)}
+  .fc-next{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .fc-next .txt{font-size:.7rem;color:var(--grey-soft);font-weight:300;line-height:1.35}
+  .fc-next .txt b{color:var(--white);font-weight:700;font-family:var(--font-mono);font-size:.74rem}
+  .fc-next .cal-ic{width:23px;height:23px;border-radius:6px;background:rgba(196,224,26,.1);border:1px solid var(--lime-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--lime);cursor:pointer}
+  .fc-next .cal-ic svg{width:12px;height:12px}
+  .fc-next .cal-ic:hover{background:rgba(196,224,26,.2)}
+  .fc-next.empty .txt b{color:var(--grey)}
+  .fc-next.empty .cal-ic{background:var(--bg-soft);border-color:var(--line);color:var(--grey)}
+  .empty-note{margin-top:40px;color:var(--grey);font-weight:300;font-style:italic}
+
+  /* ---------- CALENDÁRIO DE REUNIÕES ---------- */
+  #screen-calendar{padding:0 0 80px}
+  .cal-head{padding:32px 0 0;border-bottom:1px solid var(--line);background:radial-gradient(120% 90% at 82% 20%, rgba(196,224,26,.07), transparent 55%),var(--bg)}
+  .cal-head h2{margin-bottom:18px}
+  .cal-controls{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding-bottom:22px}
+  .mentor-toggle{display:inline-flex;background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:4px}
+  .mentor-toggle button{background:transparent;border:none;color:var(--grey-soft);font-family:inherit;font-weight:700;font-size:.88rem;padding:9px 20px;border-radius:9px;cursor:pointer}
+  .mentor-toggle button.active{background:var(--lime);color:#0a0a0a}
+  .range-nav{display:inline-flex;align-items:center;gap:10px}
+  .range-nav button{background:var(--bg-card);border:1px solid var(--line);color:var(--lime);font-size:1.1rem;font-weight:800;width:32px;height:32px;border-radius:50%;cursor:pointer;font-family:inherit}
+  .range-nav button:hover{background:var(--bg-soft)}
+  .range-label{font-family:var(--font-mono);font-size:.82rem;color:var(--grey-soft);font-weight:700;min-width:190px;text-align:center}
+  .export-btn{display:inline-flex;align-items:center;gap:9px;background:var(--lime);color:#0a0a0a;border:none;border-radius:10px;padding:11px 20px;font-family:inherit;font-weight:800;font-size:.86rem;cursor:pointer}
+  .export-btn svg{width:15px;height:15px}
+  .export-btn:hover{opacity:.88}
+
+  .months-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--line)}
+  .month-col{border-right:1px solid var(--line);display:flex;flex-direction:column}
+  .month-col:last-child{border-right:none}
+  .month-head{padding:16px 18px;border-bottom:1px solid var(--line);background:rgba(196,224,26,.07)}
+  .month-head .mh-name{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
+  .month-head .mh-year{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.14em;color:var(--grey-soft);margin-top:2px}
+  .month-body{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1}
+
+  .meet-rect{background:var(--bg-card);border:1px solid var(--line);border-radius:9px;padding:11px 14px;cursor:pointer;transition:.14s;
+    display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center}
+  .meet-rect:hover{border-color:var(--lime-dim);transform:translateY(-1px)}
+  .meet-rect .mr-name{font-size:.86rem;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meet-rect .mr-daydate{font-family:var(--font-mono);text-align:right;line-height:1.15}
+  .meet-rect .mr-day{display:block;font-size:.6rem;text-transform:uppercase;color:var(--grey);letter-spacing:.08em}
+  .meet-rect .mr-date{display:block;font-size:.92rem;font-weight:800;color:var(--lime)}
+  .meet-rect .mr-time{font-family:var(--font-mono);font-size:.8rem;font-weight:700;color:var(--grey-soft);text-align:right;min-width:48px}
+  .meet-rect.empty .mr-day,.meet-rect.empty .mr-date,.meet-rect.empty .mr-time{color:var(--grey);font-weight:600}
+  .meet-rect.empty{border-style:dashed}
+  .meet-rect.conflict{border-color:var(--carmim)}
+  .meet-rect.conflict .mr-date,.meet-rect.conflict .mr-time{color:var(--carmim)}
+  .meet-rect.skip .mr-date,.meet-rect.skip .mr-time{color:var(--grey)}
+
+  #calendar-print-root{display:none}
+  @media print{
+    body.printing-calendar > *{display:none!important}
+    body.printing-calendar #screen-calendar{display:block!important;position:static}
+    body.printing-calendar #screen-calendar > *:not(#calendar-print-root){display:none!important}
+    body.printing-calendar #calendar-print-root{display:block!important;background:#fff;color:#000}
+    #calendar-print-root h2{margin:0 0 4px}
+    #calendar-print-root p{margin:0 0 18px;color:#333}
+    #calendar-print-root table{width:100%;border-collapse:collapse;font-size:13px}
+    #calendar-print-root th,#calendar-print-root td{border:1px solid #ccc;padding:8px 10px;text-align:left}
+    #calendar-print-root th{background:#f2f2f2}
+  }
+  @media(max-width:900px){.months-grid{grid-template-columns:1fr}.month-col{border-right:none;border-bottom:1px solid var(--line)}.month-col:last-child{border-bottom:none}}
+
+  /* ---------- SETTINGS ---------- */
+  .add-colab-row{display:flex;gap:10px;margin:18px 0 20px;max-width:620px;flex-wrap:wrap}
+  .add-colab-row input{flex:1;min-width:180px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;color:var(--white);padding:11px 13px;font-family:inherit;font-size:.95rem}
+  .colab-row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:10px}
+  .cr-name{font-weight:700;font-size:.98rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .cr-cargo{font-size:.78rem;color:var(--grey);font-weight:400}
+  .cr-edit-fields{display:flex;flex-direction:column;gap:8px;flex:1}
+  .cr-actions{display:flex;gap:8px}
+  .cr-edit-input{background:var(--bg);border:1px solid var(--lime-dim);border-radius:6px;color:var(--white);padding:9px 11px;font-family:inherit;font-size:.94rem;width:100%}
+  .danger-box{background:rgba(208,16,74,.06);border:1px solid rgba(208,16,74,.35);border-radius:12px;padding:22px 24px;margin-top:16px;max-width:640px}
+  .danger-box p{color:var(--grey-soft);font-weight:300;margin-bottom:16px;font-size:.9rem}
+
+  /* ---------- GRADE DE CICLOS ---------- */
+  .year-nav{display:inline-flex;align-items:center;gap:10px;margin-top:22px;background:var(--bg-card);border:1px solid var(--line);border-radius:30px;padding:6px 8px}
+  .year-nav button{background:transparent;border:none;color:var(--lime);font-size:1.2rem;font-weight:800;cursor:pointer;width:34px;height:34px;border-radius:50%;font-family:inherit}
+  .year-nav button:hover{background:var(--bg-soft)}
+  .year-nav span{font-size:1.05rem;font-weight:800;min-width:64px;text-align:center}
+  .cycles-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:30px}
+  .cycle-col{background:var(--bg-soft);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 26px rgba(0,0,0,.28);overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+  /* cabeçalho estilo pôster: título/ano no topo + faixa diagonal com gradiente da marca */
+  .cycle-col .ch{position:relative;padding:18px 20px 0;background:var(--bg-card);overflow:hidden;min-height:230px}
+  .cycle-col .ch b{position:relative;z-index:3;display:block;font-size:1.65rem;font-weight:800;letter-spacing:-.01em;line-height:1;color:var(--white)}
+  .cycle-col .ch .ch-year{position:relative;z-index:3;font-family:var(--font-mono);font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);margin-top:7px}
+  /* faixa diagonal do banner (recebe imagem quando disponível) */
+  .cycle-col .ch .ch-band{position:absolute;left:0;right:0;bottom:0;height:162px;clip-path:polygon(0 22px,100% 0,100% 100%,0 100%);overflow:hidden;background:linear-gradient(160deg,var(--carmim),#5e0a24)}
+  .cycle-col .ch .ch-band img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  /* filtro vermelho sobre a imagem, no mesmo estilo do CEUB (sem listras) */
+  .cycle-col .ch .ch-band .ch-band-filter{position:absolute;inset:0;background:linear-gradient(160deg,rgba(208,16,74,.80) 0%,rgba(120,8,42,.66) 100%)}
+  .cycle-col .ch .ch-band.ch-fallback img,.cycle-col .ch .ch-band.ch-fallback .ch-band-filter{display:none}
+  .cycle-col .cb{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .cycle-col .cf{margin:2px 12px 12px;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;text-align:center;padding:8px 10px;border-radius:8px;color:var(--grey);background:var(--bg-card);border:1px solid var(--line)}
+  .cycle-col .cf.done{color:var(--lime);border-color:rgba(196,224,26,.35);background:rgba(196,224,26,.06)}
+
+  /* ---------- CARD DO MENTOR (topo direito, alinhado ao Ciclo 4) ---------- */
+  #screen-hub .gest-head .wrap-hub{position:relative}
+  .mentor-box{position:absolute;top:6px;right:28px;z-index:6}
+  .mentor-eyebrow{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--carmim);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .mentor-eyebrow::before{content:"";width:22px;height:2px;background:var(--carmim);display:inline-block;flex-shrink:0}
+  .mentor-card{display:flex;align-items:stretch;min-height:132px;background:var(--bg-soft);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 10px 26px rgba(0,0,0,.28)}
+  .mentor-info{flex:1;min-width:0;padding:15px 16px;display:flex;flex-direction:column;justify-content:center}
+  .mentor-name{font-size:1.2rem;font-weight:800;letter-spacing:-.01em;color:var(--white);line-height:1.05}
+  .mentor-role{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.05em;text-transform:uppercase;color:var(--grey);margin-top:4px}
+  .mentor-meet{margin-top:12px}
+  .mentor-meet .mm-top{display:flex;align-items:baseline;gap:8px}
+  .mm-pct{font-size:1.3rem;font-weight:800;color:var(--lime);line-height:1}
+  .mm-count{font-family:var(--font-mono);font-size:.6rem;color:var(--grey-soft)}
+  .mm-track{height:6px;background:var(--bg-card);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:7px}
+  .mm-fill{height:100%;background:var(--lime);border-radius:6px}
+  .mm-cap{font-family:var(--font-mono);font-size:.54rem;letter-spacing:.07em;text-transform:uppercase;color:var(--grey);margin-top:6px}
+  .mentor-photo{flex:0 0 132px;width:132px;position:relative;border-left:1px solid var(--line)}
+  .mentor-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  @media(max-width:1100px){
+    .mentor-box{position:static;width:auto!important;right:auto!important;margin-top:22px;max-width:440px}
+  }
+
+  /* seletor de mentor por ciclo (aba de configurações) */
+  .colab-row{grid-template-columns:1fr auto auto}
+  .cr-mentor{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+  .cr-mentor .cm-grp{display:flex;flex-direction:column;gap:3px}
+  .cr-mentor label{font-family:var(--font-mono);font-size:.54rem;letter-spacing:.08em;text-transform:uppercase;color:var(--grey);font-weight:600}
+  .cr-mentor select{background:var(--bg);border:1px solid var(--line);color:var(--white);border-radius:8px;padding:7px 10px;font-family:inherit;font-size:.86rem;cursor:pointer}
+  .cr-mentor select:focus{border-color:var(--lime-dim);outline:none}
+  .cr-mentor .cm-even select{color:var(--grey-soft);background:var(--bg-soft)}
+  @media(max-width:820px){.colab-row{grid-template-columns:1fr}}
+
+  /* célula de mês estilo week-card do pôster: rótulo+status à esquerda, número do mês, data/hora à direita */
+  .month-cell{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg-card);display:flex;align-items:stretch;gap:8px;padding:10px 12px;min-height:66px;transition:.15s;overflow:hidden}
+  .month-cell:hover{border-color:var(--lime-dim);transform:translateY(-2px)}
+  .mc-main{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:4px;text-align:left;cursor:pointer;background:none;border:none;font-family:inherit;color:inherit;padding:0}
+  .mc-m{font-family:var(--font-mono);font-size:.95rem;letter-spacing:.02em;text-transform:uppercase;color:var(--grey-soft);font-weight:700}
+  .mc-s{font-family:var(--font-mono);font-size:.66rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--grey)}
+  .mc-s i{width:7px;height:7px;border-radius:50%;background:var(--grey);display:inline-block;flex-shrink:0}
+  .mc-num{align-self:center;font-size:2rem;font-weight:800;line-height:1;color:var(--grey);font-family:var(--font-head)}
+  .mc-dt{align-self:center;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:1px;min-width:56px;font-family:var(--font-mono);font-size:.6rem;line-height:1.2;text-align:right;background:none;border:none;padding:0 0 0 4px;color:var(--grey)}
+  button.mc-dt{cursor:pointer}
+  .mc-dt .mc-dt-d{font-weight:700;color:var(--grey-soft)}
+  .mc-dt .mc-dt-h{color:var(--grey)}
+  .mc-dt.rc-done .mc-dt-d{color:var(--lime)}
+  .mc-dt.rc-skip .mc-dt-d{color:var(--carmim)}
+  .mc-dt.rc-agendada .mc-dt-d{color:var(--grey-soft)}
+  .mc-dt.rc-agendada{opacity:.85}
+  button.mc-dt:hover .mc-dt-d{color:var(--lime)}
+
+  .month-cell.mc-resp .mc-s{color:var(--grey-soft)} .month-cell.mc-resp .mc-s i{background:var(--grey-soft)}
+  .month-cell.mc-done .mc-s{color:var(--lime)} .month-cell.mc-done .mc-s i{background:var(--lime)}
+  .month-cell.mc-incompleto{border-color:rgba(208,16,74,.4)}
+  .month-cell.mc-incompleto .mc-s{color:var(--carmim)} .month-cell.mc-incompleto .mc-s i{background:var(--carmim)}
+
+  /* mês atual destacado em verde (mesmo princípio do highlight rosa do pôster) */
+  .month-cell.mc-current{border-color:rgba(196,224,26,.45);background:linear-gradient(160deg,rgba(196,224,26,.10),rgba(196,224,26,.03))}
+  .month-cell.mc-current::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--lime)}
+  .month-cell.mc-current .mc-num{color:var(--lime)}
+
+  .save-hint{font-size:.82rem;color:var(--grey);margin-top:14px;font-weight:300}
+  .save-hint b{color:var(--lime);font-weight:600}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+  .modal-box{background:var(--bg-soft);border:1px solid var(--line);border-radius:16px;padding:28px 30px;max-width:480px;width:100%;position:relative}
+  .modal-box::after{content:"";position:absolute;top:0;left:0;width:100%;height:3px;background:var(--carmim)}
+  .modal-head{font-size:1.2rem;font-weight:800;margin-bottom:10px}
+  .modal-sub{color:var(--grey-soft);font-weight:300;font-size:.92rem;margin-bottom:22px;line-height:1.5}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+  .meet-toggle{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+  .meet-toggle3{grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .mt-btn{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;font-family:inherit;font-weight:700;color:var(--grey-soft);font-size:.88rem}
+  #mt-agendada.active{border-color:var(--lime-dim);color:var(--lime);background:rgba(196,224,26,.06)}
+  #mt-sim.active{border-color:var(--lime);background:var(--lime);color:#0a0a0a}
+  #mt-nao.active{border-color:var(--carmim);color:var(--carmim);background:rgba(208,16,74,.08)}
+
+  /* ---------- GRADE DE HORÁRIOS (modal de reunião) ---------- */
+  .time-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .time-chip{border:1px solid var(--line);background:var(--bg-card);color:var(--white);font-family:var(--font-mono);font-size:.74rem;font-weight:700;padding:6px 9px;border-radius:7px;cursor:pointer}
+  .time-chip.free:hover{border-color:var(--grey-soft)}
+  .time-chip.conflict{border-color:var(--carmim);color:var(--carmim);background:rgba(208,16,74,.08)}
+  .time-chip.selected{border-width:2px}
+  .time-chip.selected.free{background:var(--lime);color:#0a0a0a;border-color:var(--lime)}
+  .time-warn{margin-top:10px;font-size:.78rem;color:var(--carmim);font-weight:600;line-height:1.4}
+  .time-warn b{color:var(--carmim)}
+  .field input.conflict-input,#mt-hora.conflict-input{border-color:var(--carmim)!important;color:var(--carmim)}
+
+  /* toast */
+  #toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(20px);background:var(--lime);color:#0a0a0a;font-weight:700;font-size:.9rem;padding:12px 24px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:100;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:56px 0 64px;text-align:center;background:radial-gradient(90% 120% at 50% 0%, rgba(208,16,74,.10), transparent 60%),var(--bg)}
+  footer .flogo{font-size:1.6rem;font-weight:800;letter-spacing:-.01em}
+  footer .flogo .dot{color:var(--lime)}
+  footer .ftag{color:var(--grey);font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;margin-top:10px}
+
+  @media print{
+    .appbar,.savebar,.period-bar,.add-link,.goal-row .rm,#toast,.modal-overlay,.jump-eval{display:none!important}
+    body{background:#fff;color:#000}
+    .hero,section.block,.part-divider,footer,.tool{background:#fff!important}
+    .grow-step[open] .grow-body,.grow-step .grow-body{display:block!important}
+  }
+  @media(max-width:820px){
+    .metaphor,.roles,.pdi{grid-template-columns:1fr}
+    .scale{grid-template-columns:1fr 1fr}
+    .flow-step{grid-template-columns:44px 1fr;gap:14px}
+    .flow-time{grid-column:2;justify-self:start;padding:5px 16px;margin-top:2px}
+    .cycles-grid{grid-template-columns:1fr 1fr}
+    .meet-bar-row{grid-template-columns:50px 1fr 110px}
+    .jump-eval{top:12px;right:12px;padding:9px 14px;font-size:.72rem}
+  }
+  @media(max-width:480px){
+    .scale{grid-template-columns:1fr}
+    .wrap{padding:0 20px}
+    .role-toggle{grid-template-columns:1fr}
+    .cycles-grid{grid-template-columns:1fr}
+    .colab-row{grid-template-columns:1fr}
+  }
+  /* fallback de colunas da lista de colaboradores (base = 5 colunas) */
+  @media(max-width:1240px){.cards{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:1040px){.cards{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:760px){.cards{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.cards{grid-template-columns:1fr}}
+</style>
+<script src="/sync.js"></script>
+</head>
+<body>
+
+<!-- =========================================================
+     TELA 1 · LOGIN
+========================================================== -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-logo"><img src="assets/imagens/hithammers_logo_wordmark.png" alt="hit.hammers" style="height:14px;width:auto;filter:invert(1);vertical-align:middle"></div>
+    <h1>Programa <span class="lime">Afinar</span></h1>
+    <div class="login-sub">Mentoria interna. Escolha como você entra.</div>
+
+    <div class="role-toggle">
+      <button class="role-btn" id="rb-colab" onclick="selRole('colab')">
+        <span class="rb-t">Colaborador</span>
+        <span class="rb-d">Preencher meu formulário</span>
+      </button>
+      <button class="role-btn" id="rb-gestor" onclick="selRole('gestor')">
+        <span class="rb-t">Gestor</span>
+        <span class="rb-d">Val e Luiz</span>
+      </button>
+    </div>
+
+    <div class="login-panel" id="panel-colab" hidden>
+      <div class="field">
+        <label>Seu nome</label>
+        <input type="text" id="in-colab-nome" list="lista-colabs" placeholder="Digite ou escolha seu nome" autocomplete="off"
+               onkeydown="if(event.key==='Enter')entrarColab()">
+        <datalist id="lista-colabs"></datalist>
+      </div>
+      <div class="login-error" id="err-colab"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="entrarColab()">Visualizar formulário</button>
+    </div>
+
+    <div class="login-panel" id="panel-gestor" hidden>
+      <div class="field">
+        <label>Senha de gestor</label>
+        <input type="password" id="in-gestor-senha" placeholder="Digite a senha" autocomplete="off"
+               onkeydown="if(event.key==='Enter')entrarGestor()">
+      </div>
+      <div class="login-error" id="err-gestor"></div>
+      <button class="btn btn-primary" id="btn-gestor" style="width:100%;margin-top:8px" onclick="entrarGestor()">Entrar</button>
+    </div>
+
+    <div class="login-foot">
+      Cada formulário fica salvo por pessoa e por mês. Vários colaboradores podem preencher ao mesmo tempo sem um interferir no outro.
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     TELA 2 · LISTA DE COLABORADORES (gestor)
+========================================================== -->
+<div id="screen-gestor" hidden>
+  <div class="appbar">
+    <div class="wrap wrap-wide">
+      <div class="who">Logado como <b>Gestor</b><span class="pill g">Val e Luiz</span></div>
+      <div class="appbar-actions">
+        <button class="btn btn-ghost icon-btn" onclick="abrirSettings()" title="Configurações">⚙</button>
+        <button class="btn btn-ghost" onclick="logout()">Sair</button>
+      </div>
+    </div>
+  </div>
+  <div class="gest-head">
+    <div class="wrap wrap-wide">
+      <div class="sec-eyebrow">Painel do mentor</div>
+      <h2>Formulários dos <span class="lime">colaboradores</span></h2>
+      <p>Clique em um colaborador para ver a linha do tempo dele por ciclo e mês. Use o filtro para ver só os seus mentorados.</p>
+      <div class="filter-row">
+        <div class="filter-bar">
+          <span class="fl-lbl">Mostrar</span>
+          <button class="chip active" data-f="todos" onclick="setFiltro('todos')">Todos</button>
+          <button class="chip" data-f="Val" onclick="setFiltro('Val')">Mentorados de Val</button>
+          <button class="chip" data-f="Luiz" onclick="setFiltro('Luiz')">Mentorados de Luiz</button>
+        </div>
+        <button class="cal-nav-btn" onclick="abrirCalendario()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Calendário de reuniões</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap wrap-wide">
+    <div id="mentor-bars-top"></div>
+    <div class="cards" id="cards-root"></div>
+    <div class="empty-note" id="empty-note" hidden>Nenhum colaborador para este filtro ainda.</div>
+  </div>
+</div>
+
+<!-- =========================================================
+     TELA 2B · CALENDÁRIO DE REUNIÕES (gestor)
+========================================================== -->
+<div id="screen-calendar" hidden>
+  <div class="appbar">
+    <div class="wrap wrap-wide">
+      <div class="who">Logado como <b>Gestor</b><span class="pill g">Val e Luiz</span></div>
+      <div class="appbar-actions">
+        <button class="btn btn-ghost" onclick="fecharCalendario()">&larr; Colaboradores</button>
+        <button class="btn btn-ghost" onclick="logout()">Sair</button>
+      </div>
+    </div>
+  </div>
+  <div class="cal-head">
+    <div class="wrap wrap-wide">
+      <div class="sec-eyebrow">Painel do mentor</div>
+      <h2>Calendário de <span class="lime">reuniões</span></h2>
+      <div class="cal-controls">
+        <div class="mentor-toggle">
+          <button id="cal-mt-val" onclick="setCalMentor('Val')">Val</button>
+          <button id="cal-mt-luiz" onclick="setCalMentor('Luiz')">Luiz</button>
+        </div>
+        <div class="range-nav">
+          <button onclick="shiftCalCiclo(-1)" title="Ciclo anterior">&lsaquo;</button>
+          <span class="range-label" id="cal-range-label"></span>
+          <button onclick="shiftCalCiclo(1)" title="Próximo ciclo">&rsaquo;</button>
+        </div>
+        <button class="export-btn" onclick="exportarCalendarioPDF()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+          Exportar calendário em PDF
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap wrap-wide">
+    <div class="months-grid" id="cal-months-grid"></div>
+  </div>
+  <div id="calendar-print-root"></div>
+</div>
+
+<!-- =========================================================
+     TELA 3 · GRADE DE CICLOS / MESES (hub)
+========================================================== -->
+<div id="screen-hub" hidden>
+  <div class="appbar">
+    <div class="wrap wrap-hub">
+      <div class="who" id="hub-who"></div>
+      <div class="appbar-actions">
+        <button class="btn btn-ghost" id="hub-voltar" onclick="hubVoltar()">&larr; Colaboradores</button>
+        <button class="btn btn-ghost" onclick="logout()">Sair</button>
+      </div>
+    </div>
+  </div>
+  <div class="gest-head">
+    <div class="wrap wrap-hub">
+      <div class="sec-eyebrow" id="hub-eyebrow">Linha do tempo</div>
+      <h2 id="hub-title"></h2>
+      <p>Selecione o ano e clique no mês para abrir o formulário daquele ciclo.</p>
+      <div class="year-nav">
+        <button onclick="mudarAno(-1)" title="Ano anterior">&lsaquo;</button>
+        <span id="year-label">2026</span>
+        <button onclick="mudarAno(1)" title="Próximo ano">&rsaquo;</button>
+      </div>
+      <div class="mentor-box" id="mentor-box"></div>
+    </div>
+  </div>
+  <div class="wrap wrap-hub">
+    <div class="cycles-grid" id="cycles-root"></div>
+  </div>
+</div>
+
+<!-- =========================================================
+     TELA 4 · CONFIGURAÇÕES (gestor)
+========================================================== -->
+<div id="screen-settings" hidden>
+  <div class="appbar">
+    <div class="wrap">
+      <div class="who"><b>Configurações</b><span class="pill g">Gestor</span></div>
+      <div class="appbar-actions">
+        <button class="btn btn-ghost" onclick="fecharSettings()">&larr; Voltar</button>
+      </div>
+    </div>
+  </div>
+  <div class="gest-head">
+    <div class="wrap">
+      <div class="sec-eyebrow">Painel administrativo</div>
+      <h2>Configurações do <span class="lime">programa</span></h2>
+      <p>Gerencie a lista de colaboradores do programa.</p>
+    </div>
+  </div>
+  <div class="wrap">
+    <h3 style="margin-top:36px">Colaboradores</h3>
+    <div class="add-colab-row">
+      <input type="text" id="novo-colab-nome" placeholder="Nome do novo colaborador"
+             onkeydown="if(event.key==='Enter')onAdicionarColaborador()">
+      <input type="text" id="novo-colab-cargo" placeholder="Cargo (opcional)"
+             onkeydown="if(event.key==='Enter')onAdicionarColaborador()">
+      <button class="btn btn-ghost" onclick="onAdicionarColaborador()">+ Adicionar</button>
+    </div>
+    <div id="colab-list"></div>
+
+    <div style="margin-top:22px">
+      <button class="btn btn-ghost" onclick="sortearMentores()">🎲 Sortear mentores (7 e 7)</button>
+      <p class="save-hint" style="margin-top:8px">Distribui os colaboradores aleatoriamente entre Val e Luiz, 7 para cada nos ciclos ímpares (e o inverso nos pares). Feito para usar uma única vez.</p>
+    </div>
+
+    <h3 style="margin-top:46px">Backup</h3>
+    <div style="margin-top:6px">
+      <button class="btn btn-ghost" onclick="exportarBackupHTML()">💾 Exportar HTML completo (backup)</button>
+      <p class="save-hint" style="margin-top:8px">Gera um arquivo <b>.html</b> autossuficiente com todos os dados atuais embutidos (colaboradores, avaliações, reuniões e mentores). No Chrome/Edge você escolhe onde salvar; nos demais navegadores cai no download automático. Abra o arquivo salvo a qualquer momento para ver o estado congelado daquele backup.</p>
+    </div>
+
+    <h3 style="margin-top:46px">Zona de risco</h3>
+    <div class="danger-box">
+      <p>Apaga permanentemente todos os formulários, avaliações e reuniões de todos os colaboradores. A lista de nomes em si não é afetada.</p>
+      <button class="btn btn-danger" onclick="pedirExclusaoTotal()">Excluir todos os dados</button>
+    </div>
+  </div>
+  <footer>
+    <div class="wrap">
+      <div class="flogo"><img src="assets/imagens/hithammers_logo_wordmark.png" alt="hit.hammers" style="height:26px;width:auto;filter:invert(1)"></div>
+      <div class="ftag">Programa Afinar · Desenvolvimento Interno</div>
+    </div>
+  </footer>
+</div>
+
+<!-- =========================================================
+     TELA 5 · FORMULÁRIO
+========================================================== -->
+<div id="screen-app" hidden>
+
+  <div class="appbar">
+    <div class="wrap">
+      <div class="who" id="app-who"></div>
+      <div class="appbar-actions">
+        <button class="btn btn-ghost" onclick="voltarHub()">&larr; Meses</button>
+        <button class="btn btn-primary" onclick="salvar()">Salvar</button>
+        <button class="btn btn-ghost" onclick="logout()">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="period-bar">
+    <div class="wrap">
+      <span class="pb-cycle" id="pb-cycle">Ciclo 3</span>
+      <span class="pb-month" id="pb-month">Julho de 2026</span>
+    </div>
+  </div>
+
+  <div class="wrap" id="form-alert-wrap" hidden style="padding-top:20px">
+    <div class="form-alert" id="form-alert"></div>
+  </div>
+
+  <!-- ---------- MÉTODO (só colaborador) ---------- -->
+  <div id="metodo">
+    <header class="hero">
+      <button type="button" class="jump-eval" id="btn-jump-eval" onclick="document.getElementById('inst1').scrollIntoView({behavior:'smooth'})">Ir direto para a avaliação ↓</button>
+      <div class="wrap" style="display:flex;flex-direction:column;flex:1">
+        <div class="logo"><img src="assets/imagens/hithammers_logo_wordmark.png" alt="hit.hammers" style="height:16px;width:auto;filter:invert(1);vertical-align:middle"> &nbsp;·&nbsp; programa interno de desenvolvimento</div>
+        <div style="margin-top:auto">
+          <span class="eyebrow">Mentoria de carreira · Time de Marketing & Comunicação</span>
+          <h1 class="hero-title">Programa <span class="lime">Afinar</span></h1>
+          <p class="hero-lead">O martelo não existe só para quebrar. Existe para <em>testar onde soa oco e reforçar onde já vibra</em>. Este é o método que aplicamos nas marcas, agora voltado para dentro, para desenvolver quem constrói a hit.hammers.</p>
+          <div class="hero-meta">
+            <div><div class="num">15</div><div class="lbl">Mentorados</div></div>
+            <div><div class="num">2</div><div class="lbl">Sócios-mentores</div></div>
+            <div><div class="num">Trimestral</div><div class="lbl">Ciclo</div></div>
+            <div><div class="num">Mensal</div><div class="lbl">Cadência</div></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="block"><div class="wrap">
+      <div class="sec-eyebrow">01 · O que é (e o que não é)</div>
+      <h2>Mentoria não é reunião de <span class="lime">status</span></h2>
+      <p class="body">Três coisas costumam ser confundidas e, quando misturadas, o programa vira reunião de projeto disfarçada e o desenvolvimento nunca acontece. O Afinar separa isso de forma explícita:</p>
+      <h3><span class="idx">·</span>Mentoria</h3>
+      <p class="body">Desenvolvimento de carreira e visão de longo prazo. O sócio compartilha experiência e abre caminho. <strong>É o coração deste programa.</strong></p>
+      <h3><span class="idx">·</span>Coaching</h3>
+      <p class="body">Performance específica, em que o mentorado é levado a encontrar as próprias respostas por meio de boas perguntas. <strong>Entra como componente</strong>, sobretudo com quem já tem repertório.</p>
+      <div class="ops-warning">
+        <h3><span class="idx" style="color:var(--carmim)">·</span>Suporte operacional <span class="badge-carmim">Não faz parte da mentoria</span></h3>
+        <p class="body">"Me ajuda com essa campanha." Isso é gestão do dia a dia e <strong>tem outro canal</strong>. Não ocupa a sessão de mentoria. Sem essa fronteira, o programa desanda.</p>
+      </div>
+      <div class="lead-note">Regra da casa: o que se discute no Afinar não vira insumo de avaliação de desempenho. Sem essa garantia, ninguém expõe fraqueza real, e mentoria sem franqueza é teatro.</div>
+    </div></section>
+
+    <section class="block"><div class="wrap">
+      <div class="sec-eyebrow">01 · Como se encaixa no que já existe</div>
+      <h2>Separado do feedback formal, não <span class="lime">desconectado</span></h2>
+      <p class="body">A cultura da casa já prevê um ritual trimestral de <strong>feedback formal individual</strong> (gestor e colaborador, focado em performance). O Afinar é um processo distinto: foco em desenvolvimento e carreira, conduzido por Val e Luiz. São coisas diferentes de propósito, mas precisam conversar, senão a pessoa recebe leituras contraditórias sobre a própria trajetória.</p>
+      <div class="metaphor">
+        <div class="side carmim-side" style="border-left-color:var(--carmim)">
+          <small>Feedback formal (já existe)</small>
+          <p>Trimestral. Avalia performance. Conduzido pela gestão direta. Alimenta decisões de cargo e reconhecimento.</p>
+        </div>
+        <div class="side on">
+          <small>Afinar (este programa)</small>
+          <p>Mensal. Desenvolve competência e carreira. Conduzido por Val e Luiz. Confidencial, não alimenta avaliação.</p>
+        </div>
+      </div>
+    </div></section>
+
+    <section class="block"><div class="wrap">
+      <div class="sec-eyebrow">02 · O princípio</div>
+      <h2>O mesmo martelo, virado <span class="lime">para dentro</span></h2>
+      <p class="body">A hit.hammers testa marcas para descobrir o que é oco e o que ressoa. Uma matriz de competências faz exatamente isso com uma carreira: mostra onde a pessoa ainda soa oco e onde já vibra com sentido. A mentoria é o toque preciso que transforma um no outro.</p>
+      <div class="metaphor">
+        <div class="side"><small>Se soar oco</small><p>Identificamos o gap com honestidade e construímos um plano para preencher.</p></div>
+        <div class="side on"><small>Se vibrar com sentido</small><p>Reforçamos, damos palco e transformamos força individual em padrão do time.</p></div>
+      </div>
+      <p class="body">O toque aqui é de calibração, não de demolição. O objetivo nunca é apontar falha. É afinar potencial que já existe.</p>
+      <p class="body">Isso não é teoria importada de fora. É a própria cultura da casa aplicada ao desenvolvimento das pessoas: <strong>conversas difíceis são bem-vindas</strong>, <strong>feedback negativo é sempre em privado</strong>, <strong>toda combinação vira registro</strong> e <strong>cada pessoa traz uma iniciativa nova a cada trimestre</strong>. A matriz e o roteiro a seguir foram desenhados para dar corpo a esses valores, não para substituí-los.</p>
+    </div></section>
+
+    <section class="block"><div class="wrap">
+      <div class="sec-eyebrow">03 · Estrutura de mentores</div>
+      <h2>Dois mentores plenos, dois olhares</h2>
+      <p class="body">Val e Luiz mentoram qualquer tema, do ofício técnico à visão de carreira. Não há divisão de assunto entre eles. Cada um conduz a pessoa por inteiro.</p>
+      <p class="body">O valor de ter dois mentores não está em repartir a matéria, e sim em oferecer <strong>duas experiências distintas sobre a mesma carreira</strong>. São trajetórias diferentes, mais de 30 anos e mais de 20 anos de estrada, formações e vivências que não se sobrepõem. A pessoa que passa pelos dois ao longo do tempo recebe dois repertórios, duas formas de ler o mesmo desafio. É isso que enriquece.</p>
+      <div class="roles">
+        <div class="role-card">
+          <div class="role-tag">Mentor pleno</div><div class="role-name">Val</div>
+          <div class="role-editable">Mentora qualquer tema</div>
+          <ul>
+            <li>Trajetória de mais de 30 anos entre marca, criação e liderança de negócios</li>
+            <li>Traz o olhar de quem construiu marcas do zero e liderou pessoas</li>
+            <li>Conduz do ofício técnico à carreira, conforme o que a pessoa precisa</li>
+          </ul>
+        </div>
+        <div class="role-card carmim">
+          <div class="role-tag">Mentor pleno</div><div class="role-name">Luiz</div>
+          <div class="role-editable carmim">Mentora qualquer tema</div>
+          <ul>
+            <li>Mais de 20 anos com foco em performance, gestão orientada a resultado e growth</li>
+            <li>Traz o olhar de quem pauta decisão em indicador e método</li>
+            <li>Conduz do ofício técnico à carreira, conforme o que a pessoa precisa</li>
+          </ul>
+        </div>
+      </div>
+      <div class="lead-note">Por isso a pessoa passa pelos dois ao longo do ano: não para trocar de assunto, mas para ganhar dois ângulos sobre a própria trajetória. O que muda de um mentor para o outro é a lente, não o escopo.</div>
+    </div></section>
+
+    <section class="block"><div class="wrap">
+      <div class="sec-eyebrow">04 · Diagnóstico</div>
+      <h2>Matriz de competências <span class="lime">observáveis</span></h2>
+      <p class="body">Nada de teste de personalidade genérico. A base é uma matriz de comportamentos observáveis. Cada colaborador se autoavalia; o mentor avalia em paralelo. <strong>O gap entre as duas notas é o insight mais valioso</strong>. Revela desalinhamento de percepção e vira a pauta da primeira sessão.</p>
+      <div class="scale">
+        <div class="scale-cell"><div class="lv">1</div><div class="nm">Não faz sozinho</div><div class="ds">Depende de instrução passo a passo.</div></div>
+        <div class="scale-cell"><div class="lv">2</div><div class="nm">Faz com supervisão</div><div class="ds">Executa, mas precisa de revisão frequente.</div></div>
+        <div class="scale-cell"><div class="lv">3</div><div class="nm">Faz sozinho</div><div class="ds">Autonomia e qualidade consistente.</div></div>
+        <div class="scale-cell"><div class="lv">4</div><div class="nm">Ensina / eleva</div><div class="ds">Desenvolve outros e propõe melhorias.</div></div>
+      </div>
+      <p class="body">Meta realista para o ano: mover a maioria dos itens em <strong>um nível na matriz</strong> (por exemplo, de 2 para 3). Consistência de avanço vale mais que saltos isolados. Chegar a 4 é exceção, não expectativa.</p>
+    </div></section>
+
+    <section class="block"><div class="wrap">
+      <div class="sec-eyebrow">05 · A sessão · 1 hora · mensal</div>
+      <h2>Roteiro híbrido: diretivo no técnico, GROW no resto</h2>
+      <p class="body">GROW puro pressupõe que a pessoa já tem repertório para gerar as próprias opções, o que nem sempre é o caso, dependendo do tema e da familiaridade com ele. Por isso o roteiro bifurca no bloco central: ensino direto quando o tema é técnico e novo para a pessoa, perguntas quando é comportamental ou de carreira.</p>
+      <div class="flow">
+        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Check-in</h4><p>Como está, o que aconteceu desde a última sessão.</p></div><div class="flow-time">5 min</div></div>
+        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Revisão de compromissos</h4><p>O que combinamos foi feito? Se não, por quê? Sem isso, vira conversa sem consequência.</p></div><div class="flow-time">10 min</div></div>
+        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Foco do mês</h4><p>Técnico vira modo ensino: demonstra, explica o porquê, dá referência e um desafio. Carreira e comportamento viram modo GROW: Goal, Reality, Options, Way forward.</p></div><div class="flow-time">30 min</div></div>
+        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Compromisso</h4><p>Máximo 2 ações concretas com prazo. O principal deve ser um desafio no trabalho real, não "assistir a um curso".</p></div><div class="flow-time">10 min</div></div>
+        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Registro</h4><p>Anota o combinado no PDI. Fecha o loop.</p></div><div class="flow-time">5 min</div></div>
+      </div>
+      <div class="lead-note">Regra de ouro: no máximo 2 compromissos por sessão. Excesso de tarefas leva a nenhuma executada e ao desengajamento.</div>
+    </div></section>
+
+    <section class="block"><div class="wrap">
+      <div class="sec-eyebrow">06 · Plano de desenvolvimento</div>
+      <h2>PDI vivo, no modelo <span class="lime">70·20·10</span></h2>
+      <p class="body">Uma página por pessoa, revisada a cada trimestre. Registra onde a pessoa está (3 forças, 3 gaps prioritários da matriz), onde quer chegar em 12 meses, e o plano do trimestre distribuído segundo o princípio 70·20·10, que evita o erro de reduzir desenvolvimento a "fazer um curso".</p>
+      <div class="pdi">
+        <div class="pdi-col"><div class="pct">70%</div><div class="pt">No trabalho real</div><p>Qual projeto ou desafio concreto vai desenvolver a competência-alvo. O grosso do aprendizado mora aqui.</p></div>
+        <div class="pdi-col"><div class="pct">20%</div><div class="pt">Com pessoas</div><p>Com quem vai aprender: o mentor, um par mais experiente, uma referência interna de outra área.</p></div>
+        <div class="pdi-col"><div class="pct">10%</div><div class="pt">Formal</div><p>Curso, leitura ou material estruturado. Complementa, não substitui, a prática.</p></div>
+      </div>
+    </div></section>
+
+    <div class="part-divider"><div class="wrap">
+      <div class="pd-eyebrow">Parte 2 · Seu formulário</div>
+      <h2>Do método à <span class="lime">prática</span></h2>
+      <p>Preencha a matriz de competências (sua autoavaliação) e a ficha de PDI. A matriz calcula o gap sozinha. Ao final, salve o formulário para que seu mentor possa visualizar suas respostas. Você poderá voltar a essa página para conferir as avaliações dele e os possíveis gaps.</p>
+    </div></div>
+  </div><!-- /metodo -->
+
+  <!-- ---------- INSTRUMENTO 1 · MATRIZ ---------- -->
+  <section class="tool" id="inst1">
+    <div class="wrap">
+      <div class="sec-eyebrow">Instrumento 01 · Diagnóstico</div>
+      <h2>Matriz de competências <span id="i1-lock-tag" class="lock-tag" hidden>respostas do colaborador</span></h2>
+      <p class="body" id="i1-desc-colab">Cada competência recebe uma nota de 1 a 4 na coluna <strong>Autoavaliação</strong> (como você se vê). A coluna do mentor é preenchida por Val ou Luiz depois, e o gap entre as duas vira o ponto de partida da conversa.</p>
+      <p class="body" id="i1-desc-gestor" hidden>A coluna <strong>Autoavaliação</strong> traz as notas do próprio colaborador (travadas). Preencha a coluna <strong>Mentor</strong> com a sua leitura. O gap é calculado na hora.</p>
+
+      <div class="field-row">
+        <div class="field"><label>Nome do colaborador</label><input type="text" id="m_nome" readonly></div>
+        <div class="field"><label>Função / área</label>
+          <select id="m_unit" onchange="atualizarAlertaForm()">
+            <option value="">Selecione</option>
+            <option>Conteúdo</option>
+            <option>Audiovisual</option>
+            <option>Design</option>
+            <option>Canais digitais</option>
+            <option>Eventos</option>
+            <option>Apoio operacional</option>
+            <option>Comunicação (head)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Mentor deste ciclo</label>
+          <input type="text" id="m_mentor_view" readonly placeholder="Definido pelo gestor na Seção 03">
+        </div>
+        <div class="field"><label>Data de resposta</label><input type="date" id="m_data" onchange="atualizarAlertaForm()"></div>
+      </div>
+
+      <div class="gap-legend">
+        <span><i style="background:var(--lime)"></i> Gap positivo: mentor vê mais força que a própria pessoa</span>
+        <span><i style="background:var(--carmim)"></i> Gap negativo: pessoa se vê melhor do que o mentor observa</span>
+        <span><i style="background:var(--grey)"></i> Zero: percepções alinhadas</span>
+      </div>
+
+      <div class="scale-highlight">
+        <div class="sh-title">Antes de preencher: o que cada nota significa</div>
+        <div class="scale">
+          <div class="scale-cell"><div class="lv">1</div><div class="nm">Não faz sozinho</div><div class="ds">Depende de instrução passo a passo.</div></div>
+          <div class="scale-cell"><div class="lv">2</div><div class="nm">Faz com supervisão</div><div class="ds">Executa, mas precisa de revisão frequente.</div></div>
+          <div class="scale-cell"><div class="lv">3</div><div class="nm">Faz sozinho</div><div class="ds">Autonomia e qualidade consistente.</div></div>
+          <div class="scale-cell"><div class="lv">4</div><div class="nm">Ensina / eleva</div><div class="ds">Desenvolve outros e propõe melhorias.</div></div>
+        </div>
+      </div>
+
+      <div class="matrix-block" id="matrix-root"></div>
+      <p class="save-hint">A escala: <b>1</b> não faz sozinho · <b>2</b> faz com supervisão · <b>3</b> faz sozinho · <b>4</b> ensina e eleva o padrão.</p>
+    </div>
+  </section>
+
+  <!-- ---------- INSTRUMENTO 2 · PDI ---------- -->
+  <section class="tool" id="inst2">
+    <div class="wrap">
+      <div class="sec-eyebrow">Instrumento 02 · Plano</div>
+      <h2>Ficha de PDI <span id="i2-lock-tag" class="lock-tag" hidden>respostas do colaborador</span></h2>
+      <p class="body">Uma página por pessoa, revisada a cada trimestre. Define o ponto de partida, o destino em 12 meses e o plano do trimestre distribuído em 70·20·10.</p>
+
+      <div class="field-row">
+        <div class="field"><label>Colaborador</label><input type="text" id="p_nome" readonly></div>
+        <div class="field"><label>Ciclo / trimestre</label><input type="text" id="p_ciclo" readonly></div>
+      </div>
+
+      <div class="field" style="margin:20px 0">
+        <label>Onde estou · 3 forças</label>
+        <textarea id="p_forcas" placeholder="As três competências mais fortes hoje, conforme a matriz" oninput="atualizarAlertaForm()"></textarea>
+      </div>
+      <div class="field" style="margin:20px 0">
+        <label>Onde estou · 3 gaps prioritários</label>
+        <textarea id="p_gaps" placeholder="Os três gaps a trabalhar neste ciclo" oninput="atualizarAlertaForm()"></textarea>
+      </div>
+      <div class="field" style="margin:20px 0">
+        <label>Onde quero chegar · aspiração em 12 meses</label>
+        <textarea id="p_aspiracao" placeholder="Direção de carreira e 2 ou 3 competências-alvo" oninput="atualizarAlertaForm()"></textarea>
+      </div>
+
+      <h3>Plano do trimestre · 70 · 20 · 10</h3>
+      <div class="pdi-plan-block pdi-70">
+        <div class="pb-head pb-70">70% · No trabalho real</div>
+        <div class="field"><textarea id="p_70" placeholder="Qual projeto ou desafio concreto vai desenvolver a competência-alvo" oninput="atualizarAlertaForm()"></textarea></div>
+      </div>
+      <div class="pdi-plan-block pdi-20">
+        <div class="pb-head pb-20">20% · Com pessoas</div>
+        <div class="field"><textarea id="p_20" placeholder="Com quem vai aprender: mentor, par, referência de outra área" oninput="atualizarAlertaForm()"></textarea></div>
+      </div>
+      <div class="pdi-plan-block pdi-10">
+        <div class="pb-head pb-10">10% · Formal</div>
+        <div class="field"><textarea id="p_10" placeholder="Curso, leitura ou material estruturado" oninput="atualizarAlertaForm()"></textarea></div>
+      </div>
+
+      <h3>Compromissos do mês · máximo 2</h3>
+      <div id="goals-root"></div>
+      <button class="add-link" id="btn-add-goal" onclick="addGoal()">+ Adicionar compromisso</button>
+    </div>
+  </section>
+
+  <!-- ---------- INSTRUMENTO 3 · ROTEIRO (só gestor) ---------- -->
+  <section class="tool" id="inst3">
+    <div class="wrap">
+      <div class="sec-eyebrow">Instrumento 03 · Condução · uso do mentor</div>
+      <h2>Roteiro de sessão</h2>
+      <p class="body">Seção exclusiva do mentor. Defina quem conduz este mentorado e anote a conversa. O colaborador não vê esta seção.</p>
+
+      <div class="field-row">
+        <div class="field"><label>Mentor deste mentorado</label>
+          <select id="r_mentor">
+            <option value="">Selecione</option>
+            <option>Val</option>
+            <option>Luiz</option>
+          </select>
+        </div>
+        <div class="field"><label>Data da sessão</label><input type="date" id="r_data"></div>
+      </div>
+
+      <details class="grow-step" open>
+        <summary><span class="letter">1</span><span>Check-in <small class="st">5 min</small></span></summary>
+        <div class="grow-body">
+          <ul><li>Como você está? O que aconteceu desde a última conversa?</li></ul>
+          <textarea id="r_checkin" placeholder="Anotações"></textarea>
+        </div>
+      </details>
+      <details class="grow-step">
+        <summary><span class="letter">2</span><span>Revisão de compromissos <small class="st">10 min</small></span></summary>
+        <div class="grow-body">
+          <ul><li>O que combinamos foi feito?</li><li>Se não, o que atrapalhou? O que a gente aprende com isso?</li></ul>
+          <textarea id="r_revisao" placeholder="Status dos compromissos anteriores"></textarea>
+        </div>
+      </details>
+      <details class="grow-step">
+        <summary><span class="letter">G</span><span>Foco do mês · Goal <small class="st">parte do bloco de 30 min</small></span></summary>
+        <div class="grow-body">
+          <ul><li>Qual o objetivo desta sessão e deste ciclo?</li><li>O que seria um bom resultado para você sair daqui hoje?</li></ul>
+          <textarea id="r_goal" placeholder="Objetivo definido"></textarea>
+        </div>
+      </details>
+      <details class="grow-step">
+        <summary><span class="letter">R</span><span>Reality <small class="st">onde estamos de fato</small></span></summary>
+        <div class="grow-body">
+          <ul><li>Onde as coisas estão hoje, com evidências concretas?</li><li>O que você já tentou? O que funcionou e o que não?</li><li>Se técnico e novo para a pessoa: aqui o mentor demonstra e explica o porquê.</li></ul>
+          <textarea id="r_reality" placeholder="Situação atual"></textarea>
+        </div>
+      </details>
+      <details class="grow-step">
+        <summary><span class="letter">O</span><span>Options <small class="st">caminhos possíveis</small></span></summary>
+        <div class="grow-body">
+          <ul><li>Quais caminhos existem? E se não houvesse obstáculo, o que faria?</li><li>Qual desses caminhos te parece mais viável agora?</li></ul>
+          <textarea id="r_options" placeholder="Opções levantadas"></textarea>
+        </div>
+      </details>
+      <details class="grow-step">
+        <summary><span class="letter">W</span><span>Way forward · Compromisso <small class="st">10 min</small></span></summary>
+        <div class="grow-body">
+          <ul><li>O que você vai fazer até a próxima sessão? (máximo 2 ações)</li><li>Qual o prazo? Como vou saber que aconteceu?</li></ul>
+          <textarea id="r_way" placeholder="Compromissos assumidos e prazos"></textarea>
+        </div>
+      </details>
+      <details class="grow-step">
+        <summary><span class="letter">✓</span><span>Registro <small class="st">5 min</small></span></summary>
+        <div class="grow-body">
+          <ul><li>Transferir os compromissos para o PDI.</li></ul>
+          <textarea id="r_registro" placeholder="Notas finais para o handoff ou próxima sessão"></textarea>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <div class="savebar">
+    <div class="wrap">
+      <div class="status" id="save-status">Nada salvo ainda nesta sessão.</div>
+      <button class="btn btn-primary" onclick="salvar()">Salvar formulário</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">
+      <div class="flogo"><img src="assets/imagens/hithammers_logo_wordmark.png" alt="hit.hammers" style="height:26px;width:auto;filter:invert(1)"></div>
+      <div class="ftag">Programa Afinar · Desenvolvimento Interno</div>
+    </div>
+  </footer>
+</div>
+
+<div id="toast"></div>
+
+<div id="modal-overlay" class="modal-overlay" hidden onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" id="modal-box" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURAÇÃO EDITÁVEL / LISTA DE COLABORADORES
+========================================================== */
+const COLABORADORES_PADRAO = [
+  {nome:"Diego", cargo:"Estagiário"},
+  {nome:"Ana Lívia", cargo:"Analista"},
+  {nome:"Eduardo", cargo:"Head Canais Digitais"},
+  {nome:"Renato", cargo:"Eventos"},
+  {nome:"Larissa", cargo:"Conteúdo"},
+  {nome:"Iza", cargo:"Head de Comunicação"},
+  {nome:"Mapurunga", cargo:"Audiovisual"},
+  {nome:"Alana", cargo:"Marketing e Operações"},
+  {nome:"João", cargo:"Comunicação"},
+  {nome:"Renan", cargo:"Audiovisual"},
+  {nome:"Oscar", cargo:"Designer"},
+  {nome:"Vanderson", cargo:"Designer"},
+  {nome:"Filipe", cargo:"Head de Performance"},
+  {nome:"Vicente", cargo:"Designer"}
+];
+/* senha do gestor NÃO fica mais no client: validada em /api/gestor-login (env SYNC_PASSWORD) */
+const ANO_PADRAO = new Date().getFullYear();
+const COLAB_KEY = "afinar_v4_colaboradores";
+const PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>';
+const CAL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+
+/* fotos dos colaboradores, já recortadas e centradas no rosto (pasta imagens/cards) */
+const FOTOS = {
+  "Diego":       "diego.png",
+  "Ana Lívia":   "ana.png",
+  "Eduardo":     "eduardo.png",
+  "Renato":      "renato.png",
+  "Larissa":     "larissa.png",
+  "Iza":         "iza.png",
+  "Mapurunga":   "mapurunga.png",
+  "Oscar":       "oscar.png",
+  "Vanderson":   "vanderson.png",
+  "Filipe":      "filipe.png",
+  "Vicente":     "vicente.png",
+  "Renan":       "renan.png",
+  "Alana":       "alana.png",
+  "João":        "joao.png"
+};
+function fotoHtml(nome){
+  const src = FOTOS[nome];
+  if(!src) return PERSON_ICON;
+  return '<img src="assets/imagens/cards/'+encodeURIComponent(src)+'" alt="" loading="lazy">';
+}
+
+function getColaboradores(){
+  const raw = localStorage.getItem(COLAB_KEY);
+  let list = null;
+  if(raw){ try{ const parsed = JSON.parse(raw); if(Array.isArray(parsed)) list = parsed; }catch(e){} }
+  const fresh = !list;
+  if(fresh) list = COLABORADORES_PADRAO.map(c=>({...c}));
+  // garante metade Val / metade Luiz nos ciclos ímpares (alterna por posição na lista)
+  let changed = false;
+  list.forEach((c,i)=>{ if(!c.mentorImpar){ c.mentorImpar = (i%2===0) ? "Val" : "Luiz"; changed = true; } });
+  if(fresh || changed) setColaboradores(list);
+  return list;
+}
+function setColaboradores(list){ localStorage.setItem(COLAB_KEY, JSON.stringify(list)); }
+function getCargo(nome){
+  const c = getColaboradores().find(c=>c.nome===nome);
+  return c ? (c.cargo||"") : "";
+}
+function refreshColabDatalist(){
+  const dl = document.getElementById("lista-colabs");
+  dl.innerHTML = getColaboradores().map(c=>'<option value="'+esc(c.nome)+'">').join("");
+}
+
+/* =========================================================
+   CALENDÁRIO
+========================================================== */
+const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+               "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+function cicloDe(mes){ return Math.ceil(mes/3); }
+function mesesDoCiclo(c){ const b=(c-1)*3; return [b+1,b+2,b+3]; }
+
+/* ---- mentores (Val / Luiz) · alternam a cada ciclo ---- */
+const MENTORES = ["Val","Luiz"];
+const MENTOR_INFO = {
+  "Val":  { nome:"Val Soares", cargo:"Sócio-mentor", img:"assets/imagens/val-soares.png" },
+  "Luiz": { nome:"Luiz Perez", cargo:"Sócio-mentor", img:"assets/imagens/luiz-perez.png" }
+};
+function outroMentor(m){ return m==="Val" ? "Luiz" : "Val"; }
+function mentorImparDe(colab){ return (colab && colab.mentorImpar) ? colab.mentorImpar : "Val"; }
+function mentorDoCiclo(nome, ciclo){
+  const c = getColaboradores().find(c=>c.nome===nome);
+  const impar = mentorImparDe(c);
+  return (ciclo % 2 === 1) ? impar : outroMentor(impar);   // ímpares (1,3) = escolhido; pares (2,4) = o outro
+}
+/* reuniões realizadas / reuniões que já deveriam ter ocorrido no ciclo (1 por mês, só meses já passados) */
+function reunioesCicloStats(nome, ano, ciclo){
+  let deveriam=0, realizadas=0;
+  mesesDoCiclo(ciclo).forEach(m=>{
+    const passou = (ano < CUR.ano) || (ano===CUR.ano && m <= CUR.mes);
+    if(!passou) return;
+    deveriam++;
+    const rec = loadForm(nome, ano, m);
+    if(rec && rec.reuniao && rec.reuniao.status==='realizada') realizadas++;
+  });
+  return { realizadas: realizadas, deveriam: deveriam };
+}
+function formatarDataCurta(iso){
+  if(!iso) return "";
+  const p = iso.split("-");
+  return p[2]+"/"+p[1];
+}
+
+/* =========================================================
+   MATRIZ DE COMPETÊNCIAS
+========================================================== */
+const EIXOS = [
+  { nome: "Ofício (técnico da função)", itens: [
+    "Domínio da entrega principal da própria função",
+    "Qualidade e capricho no acabamento",
+    "Domínio das ferramentas do dia a dia",
+    "Autonomia para executar sem retrabalho",
+    "Consistência entre uma entrega e outra"
+  ]},
+  { nome: "Estratégico e de negócio", itens: [
+    "Entende o objetivo do job, não só a tarefa",
+    "Embasa decisões em dados e referência (não chuta)",
+    "Conecta o que faz ao resultado do cliente",
+    "Enxerga o público antes de produzir"
+  ]},
+  { nome: "Comportamental e condutas", itens: [
+    "Comunicação clara, adaptada a quem ouve",
+    "Cumpre prazo negociado (o prazo é do cronograma)",
+    "Documenta e registra o que combina",
+    "Recebe feedback sem defensividade",
+    "Colabora e compartilha saber com o time",
+    "Usa o canal certo pra cada comunicação e responde dentro do prazo",
+    "Aprende com o erro sem repeti-lo"
+  ]},
+  { nome: "Carreira e iniciativa", itens: [
+    "Clareza de onde quer chegar",
+    "Traz iniciativa nova a cada ciclo",
+    "Se antecipa e participa ativamente das reuniões do time",
+    "Vai além do que foi pedido quando faz sentido"
+  ]}
+];
+function opts(){
+  let s = '<option value=""></option>';
+  for(let i=1;i<=4;i++) s += `<option value="${i}">${i}</option>`;
+  return s;
+}
+function montarMatriz(){
+  const root = document.getElementById("matrix-root");
+  let html = "";
+  EIXOS.forEach((eixo, ei) => {
+    html += `<div class="matrix-axis-title"><span></span>${eixo.nome}</div>`;
+    html += `<table class="matrix"><thead><tr>
+      <th class="comp">Competência</th><th>Autoavaliação</th><th>Mentor</th><th>Gap</th></tr></thead><tbody>`;
+    eixo.itens.forEach((item, ii) => {
+      const id = `e${ei}i${ii}`;
+      html += `<tr>
+        <td class="comp">${item}</td>
+        <td><select class="sc-self" id="${id}_self" onchange="calcGap(${ei})">${opts()}</select></td>
+        <td><select class="sc-ment" id="${id}_ment" onchange="calcGap(${ei})">${opts()}</select></td>
+        <td class="gapcell gap-0" id="${id}_gap">–</td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+    html += `<div class="axis-summary">
+      <div>Média autoavaliação <b id="avg${ei}_self">–</b></div>
+      <div>Média mentor <b id="avg${ei}_ment">–</b></div>
+      <div>Gap médio do eixo <b id="avg${ei}_gap">–</b></div>
+    </div>`;
+  });
+  root.innerHTML = html;
+}
+function calcGap(ei){
+  const eixo = EIXOS[ei];
+  let somaSelf=0, somaMent=0, nSelf=0, nMent=0;
+  eixo.itens.forEach((item, ii) => {
+    const id = `e${ei}i${ii}`;
+    const self = document.getElementById(`${id}_self`).value;
+    const ment = document.getElementById(`${id}_ment`).value;
+    const cell = document.getElementById(`${id}_gap`);
+    if(self && ment){
+      const g = parseInt(ment) - parseInt(self);
+      cell.textContent = g>0 ? `+${g}` : g;
+      cell.className = "gapcell " + (g>0 ? "gap-pos" : g<0 ? "gap-neg" : "gap-0");
+    } else { cell.textContent = "–"; cell.className = "gapcell gap-0"; }
+    if(self){ somaSelf+=parseInt(self); nSelf++; }
+    if(ment){ somaMent+=parseInt(ment); nMent++; }
+  });
+  const fmt = (s,n) => n ? (s/n).toFixed(1) : "–";
+  document.getElementById(`avg${ei}_self`).textContent = fmt(somaSelf,nSelf);
+  document.getElementById(`avg${ei}_ment`).textContent = fmt(somaMent,nMent);
+  if(nSelf && nMent){
+    const gm = (somaMent/nMent) - (somaSelf/nSelf);
+    const el = document.getElementById(`avg${ei}_gap`);
+    el.textContent = (gm>0?"+":"") + gm.toFixed(1);
+    el.style.color = gm>0 ? "var(--lime)" : gm<0 ? "var(--carmim)" : "var(--white)";
+  } else { document.getElementById(`avg${ei}_gap`).textContent = "–"; }
+  atualizarAlertaForm();
+}
+
+/* =========================================================
+   CAMADA DE DADOS  (chave = colaborador + ano + mês)
+========================================================== */
+const PREFIX = "afinar_v4::";
+function keyOf(nome,ano,mes){ return PREFIX + nome + "::" + ano + "-" + String(mes).padStart(2,"0"); }
+function loadForm(nome,ano,mes){
+  const raw = localStorage.getItem(keyOf(nome,ano,mes));
+  return raw ? JSON.parse(raw) : null;
+}
+function saveForm(nome,ano,mes,rec){
+  rec.updatedAt = Date.now();
+  localStorage.setItem(keyOf(nome,ano,mes), JSON.stringify(rec));
+}
+function novoRegistro(nome,ano,mes){
+  return { nome:nome, ano:ano, mes:mes, funcao:"", data:"", mentor:"", self:{}, ment:{},
+    pdi:{ forcas:"", gaps:"", aspiracao:"", p70:"", p20:"", p10:"", compromissos:[] },
+    roteiro:{ data:"", checkin:"", revisao:"", goal:"", reality:"", options:"", way:"", registro:"" },
+    reuniao:{ status:null, data:"", hora:"" },
+    updatedAt:0 };
+}
+function allKeys(){
+  const out=[];
+  for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.indexOf(PREFIX)===0) out.push(k); }
+  return out;
+}
+function parseKey(k){
+  const rest = k.slice(PREFIX.length);
+  const idx = rest.lastIndexOf("::");
+  const nome = rest.slice(0,idx);
+  const ym = rest.slice(idx+2).split("-");
+  return { nome:nome, ano:parseInt(ym[0]), mes:parseInt(ym[1]) };
+}
+function formsDe(nome){
+  return allKeys().map(parseKey).filter(p=>p.nome===nome)
+    .map(p=>({ ano:p.ano, mes:p.mes, rec:loadForm(p.nome,p.ano,p.mes) }));
+}
+function nomesComForms(){ return [...new Set(allKeys().map(k=>parseKey(k).nome))]; }
+
+function statusRec(rec){
+  if(!rec) return "vazio";
+  const temMent = rec.ment && Object.keys(rec.ment).length;
+  const r = rec.roteiro || {};
+  const temRot = r.checkin||r.revisao||r.goal||r.reality||r.options||r.way||r.registro;
+  if(temMent || temRot) return rec.mentCompleto ? "done" : "incompleto";
+  const temSelf = rec.self && Object.keys(rec.self).length;
+  const p = rec.pdi || {};
+  const temPdi = p.forcas||p.gaps||p.aspiracao||p.p70||p.p20||p.p10||(p.compromissos&&p.compromissos.length);
+  if(temSelf || temPdi) return rec.selfCompleto ? "resp" : "incompleto";
+  return "vazio";
+}
+
+/* =========================================================
+   ESTATÍSTICAS DE REUNIÃO
+   % = reuniões marcadas "Realizada" / (marcadas "Realizada" + marcadas "Não houve")
+   Meses sem nenhum registro do gestor não entram na conta.
+========================================================== */
+function reuniaoStatsColab(nome){
+  const forms = formsDe(nome);
+  // "agendada" ainda não aconteceu, não entra na conta de % realizadas
+  const comData = forms.filter(f=>f.rec && f.rec.reuniao && (f.rec.reuniao.status==='realizada' || f.rec.reuniao.status==='nao_houve'));
+  const realizadas = comData.filter(f=>f.rec.reuniao.status==='realizada').length;
+  return { realizadas: realizadas, total: comData.length };
+}
+function reuniaoStatsMentor(mentor){
+  let total=0, realizadas=0;
+  allKeys().forEach(k=>{
+    const rec = JSON.parse(localStorage.getItem(k));
+    if(!(rec && rec.nome && rec.mes && rec.reuniao && rec.reuniao.status)) return;
+    if(rec.reuniao.status!=='realizada' && rec.reuniao.status!=='nao_houve') return;
+    // o mentor da reunião é o do ciclo daquele mês, definido pelo sorteio/config
+    if(mentorDoCiclo(rec.nome, cicloDe(rec.mes))===mentor){
+      total++; if(rec.reuniao.status==='realizada') realizadas++;
+    }
+  });
+  return { realizadas: realizadas, total: total };
+}
+/* próxima reunião agendada (ou realizada no futuro) de um colaborador, a partir de hoje */
+function proximaReuniao(nome){
+  const forms = formsDe(nome);
+  const candidatos = forms
+    .filter(f=>f.rec && f.rec.reuniao && f.rec.reuniao.data && f.rec.reuniao.status!=='nao_houve')
+    .map(f=>({data:f.rec.reuniao.data, hora:f.rec.reuniao.hora||""}))
+    .filter(c=>c.data >= isoHoje());
+  if(!candidatos.length) return null;
+  candidatos.sort((a,b)=> (a.data+a.hora).localeCompare(b.data+b.hora));
+  return candidatos[0];
+}
+function isoHoje(){
+  return CUR.ano+"-"+String(new Date().getMonth()+1).padStart(2,"0")+"-"+String(new Date().getDate()).padStart(2,"0");
+}
+function diaSemanaCurta(iso){
+  const DIAS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  const p = iso.split("-").map(Number);
+  return DIAS[new Date(p[0],p[1]-1,p[2]).getDay()];
+}
+
+
+/* =========================================================
+   ESTADO DE SESSÃO
+========================================================== */
+let ROLE = null;
+let EDITING = null;
+let PERIODO = null;
+let ANO_VISIVEL = ANO_PADRAO;
+let FILTRO = "todos";
+let MODAL_CTX = null;
+let CONFIRM_ACTION = null;
+const HOJE = new Date();
+const CUR = { ano: HOJE.getFullYear(), mes: HOJE.getMonth()+1 };
+
+/* =========================================================
+   LOGIN
+========================================================== */
+function selRole(r){
+  document.getElementById("rb-colab").classList.toggle("active", r==="colab");
+  document.getElementById("rb-gestor").classList.toggle("active", r==="gestor");
+  document.getElementById("panel-colab").hidden = (r!=="colab");
+  document.getElementById("panel-gestor").hidden = (r!=="gestor");
+  document.getElementById("err-colab").textContent = "";
+  document.getElementById("err-gestor").textContent = "";
+  setTimeout(()=>{ document.getElementById(r==="colab"?"in-colab-nome":"in-gestor-senha").focus(); },50);
+}
+function entrarColab(){
+  const nome = document.getElementById("in-colab-nome").value.trim();
+  const err = document.getElementById("err-colab");
+  if(!nome){ err.textContent = "Digite o seu nome para continuar."; return; }
+  err.textContent = "";
+  ROLE = "colab"; EDITING = nome; ANO_VISIVEL = ANO_PADRAO;
+  document.getElementById("hub-voltar").hidden = true;
+  renderHub();
+  showScreen("hub");
+}
+async function entrarGestor(){
+  const senha = document.getElementById("in-gestor-senha").value;
+  const err = document.getElementById("err-gestor");
+  const btn = document.getElementById("btn-gestor");
+  if(!senha){ err.textContent = "Digite a senha."; return; }
+  err.textContent = "Verificando…";
+  if(btn) btn.disabled = true;
+  let ok = false;
+  try{
+    const r = await fetch("/api/gestor-login", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ senha: senha })
+    });
+    const j = await r.json();
+    ok = !!(j && j.ok);
+  }catch(e){
+    if(btn) btn.disabled = false;
+    err.textContent = "Falha de conexão. Tente novamente.";
+    return;
+  }
+  if(btn) btn.disabled = false;
+  if(!ok){ err.textContent = "Senha incorreta."; return; }
+  err.textContent = "";
+  document.getElementById("in-gestor-senha").value = "";
+  ROLE = "gestor"; EDITING = null;
+  FILTRO = "todos";
+  document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("active", c.dataset.f==="todos"));
+  renderCards();
+  showScreen("gestor");
+}
+function logout(){
+  ROLE = EDITING = PERIODO = null;
+  document.getElementById("in-colab-nome").value = "";
+  document.getElementById("in-gestor-senha").value = "";
+  showScreen("login");
+}
+
+/* =========================================================
+   NAVEGAÇÃO
+========================================================== */
+function showScreen(s){
+  ["login","gestor","hub","settings","app","calendar"].forEach(x=>{ document.getElementById("screen-"+x).hidden = (x!==s); });
+  window.scrollTo(0,0);
+}
+
+/* ---- lista de colaboradores (gestor) ---- */
+function setFiltro(f){
+  FILTRO = f;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("active", c.dataset.f===f));
+  renderCards();
+}
+function renderMentorBarsTop(){
+  const root = document.getElementById("mentor-bars-top");
+  let html = '<div class="mentor-bars-box"><div class="mentor-bars-head">Reuniões realizadas · visão geral</div>';
+  ["Val","Luiz"].forEach(m=>{
+    const s = reuniaoStatsMentor(m);
+    const pct = s.total ? Math.round(s.realizadas/s.total*100) : null;
+    const track = pct===null ? "" : '<div class="mb-fill '+(pct>=80?"ok":"")+'" style="width:'+pct+'%"></div>';
+    const pctTxt = pct===null ? "Sem reuniões registradas" : pct+"% ("+s.realizadas+"/"+s.total+")";
+    html += '<div class="meet-bar-row"><div class="mb-name">'+esc(m)+'</div>'+
+      '<div class="mb-track">'+track+'</div>'+
+      '<div class="mb-pct">'+pctTxt+'</div></div>';
+  });
+  html += '</div>';
+  root.innerHTML = html;
+}
+function renderCards(){
+  renderMentorBarsTop();
+  const root = document.getElementById("cards-root");
+  const vazio = document.getElementById("empty-note");
+  const colabs = getColaboradores();
+  const cargoMap = {}; colabs.forEach(c=>cargoMap[c.nome]=c.cargo||"");
+  const nomesSet = new Set(colabs.map(c=>c.nome));
+  nomesComForms().forEach(n=>nomesSet.add(n));
+  const nomes = [...nomesSet].sort((a,b)=>a.localeCompare(b));
+  const cicloAtual = cicloDe(CUR.mes);
+  root.innerHTML = "";
+  let mostrados = 0;
+  nomes.forEach(nome=>{
+    // mentor do ciclo atual, definido pelo sorteio/config (não pelo registro)
+    const mentorAtual = mentorDoCiclo(nome, cicloAtual);
+    if(FILTRO !== "todos" && mentorAtual !== FILTRO) return;
+    mostrados++;
+    const cargo = cargoMap[nome] || "";
+    const mentorTxt = mentorAtual;
+    const rs = reuniaoStatsColab(nome);
+    const rsPct = rs.total ? Math.round(rs.realizadas/rs.total*100) : null;
+    const rsTxt = rsPct===null ? "Sem reuniões registradas" : rsPct+"% de reuniões realizadas";
+    const rsCls = rsPct===null ? "" : (rsPct>=80?"ok":"low");
+    const prox = proximaReuniao(nome);
+    const proxTxt = prox ? (diaSemanaCurta(prox.data)+" · "+formatarDataCurta(prox.data)+(prox.hora?" · "+prox.hora:"")) : "Não agendada";
+    const card = document.createElement("button");
+    card.className = "fcard";
+    card.onclick = ()=>abrirHub(nome);
+    card.innerHTML =
+      '<div class="fc-photo">'+fotoHtml(nome)+'</div>'+
+      '<div class="fc-info">'+
+        '<div class="fc-name">'+esc(nome)+'</div>'+
+        '<div class="fc-func">'+(cargo?esc(cargo):"Cargo não definido")+'</div>'+
+        '<div class="fc-mentor">Mentor · Ciclo '+cicloAtual+': <b>'+esc(mentorTxt)+'</b></div>'+
+        '<div class="fc-meet '+rsCls+'">'+rsTxt+'</div>'+
+        '<div class="fc-next'+(prox?"":" empty")+'">'+
+          '<div class="txt">Próxima reunião<br><b>'+esc(proxTxt)+'</b></div>'+
+          '<div class="cal-ic" onclick="event.stopPropagation();abrirCalendario(\''+esc(mentorTxt)+'\',\''+esc(nome)+'\')" title="Abrir calendário de reuniões">'+CAL_ICON+'</div>'+
+        '</div>'+
+      '</div>';
+    root.appendChild(card);
+  });
+  vazio.hidden = (mostrados>0);
+}
+
+/* =========================================================
+   CALENDÁRIO DE REUNIÕES (gestor)
+   Um retângulo por colaborador do mentor selecionado, agrupado
+   pelos 3 meses do ciclo em exibição — o ciclo é a mesma unidade
+   que já define a troca de mentor, então não muda no meio dele.
+========================================================== */
+let CAL_MENTOR = "Val";
+let CAL_ANO = CUR.ano;
+let CAL_CICLO = cicloDe(CUR.mes);
+let CAL_HIGHLIGHT = null;
+function abrirCalendario(mentorParam, nomeParam){
+  if(mentorParam) CAL_MENTOR = mentorParam;
+  CAL_HIGHLIGHT = nomeParam || null;
+  renderCalendario();
+  showScreen("calendar");
+}
+function fecharCalendario(){ renderCards(); showScreen("gestor"); }
+function setCalMentor(m){ CAL_MENTOR = m; CAL_HIGHLIGHT = null; renderCalendario(); }
+function shiftCalCiclo(dir){
+  CAL_CICLO += dir;
+  if(CAL_CICLO > 4){ CAL_CICLO = 1; CAL_ANO++; }
+  if(CAL_CICLO < 1){ CAL_CICLO = 4; CAL_ANO--; }
+  renderCalendario();
+}
+function colaboradoresDoMentorNoCiclo(mentor, ciclo){
+  const colabs = getColaboradores();
+  const nomesSet = new Set(colabs.map(c=>c.nome));
+  nomesComForms().forEach(n=>nomesSet.add(n));
+  return [...nomesSet].filter(n=>mentorDoCiclo(n,ciclo)===mentor).sort((a,b)=>a.localeCompare(b));
+}
+function renderCalendario(){
+  document.getElementById("cal-mt-val").classList.toggle("active", CAL_MENTOR==="Val");
+  document.getElementById("cal-mt-luiz").classList.toggle("active", CAL_MENTOR==="Luiz");
+  document.getElementById("cal-range-label").textContent =
+    "Ciclo "+CAL_CICLO+" · "+MESES[mesesDoCiclo(CAL_CICLO)[0]-1].slice(0,3)+"–"+MESES[mesesDoCiclo(CAL_CICLO)[2]-1].slice(0,3)+" "+CAL_ANO;
+
+  const nomes = colaboradoresDoMentorNoCiclo(CAL_MENTOR, CAL_CICLO);
+  const grid = document.getElementById("cal-months-grid");
+  grid.innerHTML = "";
+  mesesDoCiclo(CAL_CICLO).forEach(m=>{
+    const col = document.createElement("div");
+    col.className = "month-col";
+    let body = "";
+    if(!nomes.length){
+      body = '<div class="empty-note" style="margin-top:14px;font-size:.86rem">Nenhum mentorado neste ciclo.</div>';
+    }
+    nomes.forEach(nome=>{
+      const rec = loadForm(nome, CAL_ANO, m);
+      const reun = rec && rec.reuniao ? rec.reuniao : null;
+      const dataAttr = "data-nome=\""+esc(nome)+"\"";
+      if(reun && reun.status==='nao_houve'){
+        body += '<div class="meet-rect skip" '+dataAttr+' onclick="abrirModalReuniao('+CAL_ANO+','+m+',\''+esc(nome)+'\')">'
+          + '<div class="mr-name">'+esc(nome)+'</div>'
+          + '<div class="mr-daydate"><span class="mr-day">—</span><span class="mr-date">Não houve</span></div>'
+          + '<div class="mr-time">—</div>'
+          + '</div>';
+      } else if(reun && reun.data){
+        const conflito = reuniaoConflito(CAL_MENTOR, reun.data, reun.hora, nome);
+        body += '<div class="meet-rect'+(conflito?" conflict":"")+'" '+dataAttr+' onclick="abrirModalReuniao('+CAL_ANO+','+m+',\''+esc(nome)+'\')" title="'+(conflito?"Conflita com "+esc(conflito.nome)+" às "+conflito.hora:"")+'">'
+          + '<div class="mr-name">'+esc(nome)+'</div>'
+          + '<div class="mr-daydate"><span class="mr-day">'+diaSemanaCurta(reun.data)+'</span><span class="mr-date">'+formatarDataCurta(reun.data)+'</span></div>'
+          + '<div class="mr-time">'+esc(reun.hora||"—")+'</div>'
+          + '</div>';
+      } else {
+        body += '<div class="meet-rect empty" '+dataAttr+' onclick="abrirModalReuniao('+CAL_ANO+','+m+',\''+esc(nome)+'\')">'
+          + '<div class="mr-name">'+esc(nome)+'</div>'
+          + '<div class="mr-daydate"><span class="mr-day">—</span><span class="mr-date">Definir</span></div>'
+          + '<div class="mr-time">—</div>'
+          + '</div>';
+      }
+    });
+    col.innerHTML = '<div class="month-head"><div class="mh-name">'+MESES[m-1]+'</div><div class="mh-year">'+CAL_ANO+'</div></div>'
+      + '<div class="month-body">'+body+'</div>';
+    grid.appendChild(col);
+  });
+  if(CAL_HIGHLIGHT){
+    const alvo = grid.querySelector('.meet-rect[data-nome="'+CSS.escape(CAL_HIGHLIGHT)+'"]');
+    if(alvo){
+      alvo.scrollIntoView({behavior:"smooth", block:"center"});
+      alvo.style.borderColor = "var(--lime)";
+      setTimeout(()=>{ alvo.style.borderColor = ""; }, 1800);
+    }
+    CAL_HIGHLIGHT = null;
+  }
+}
+
+/* ---- exportar calendário em PDF (via impressão do navegador) ---- */
+function exportarCalendarioPDF(){
+  const linhas = [];
+  getColaboradores().forEach(c=>{
+    formsDe(c.nome).forEach(f=>{
+      const r = f.rec && f.rec.reuniao;
+      if(!r || !r.data || r.status==='nao_houve') return;
+      const mentor = mentorDoCiclo(c.nome, cicloDe(f.mes));
+      if(mentor !== CAL_MENTOR) return;
+      linhas.push({ nome:c.nome, mentor:mentor, data:r.data, hora:r.hora||"", status:r.status });
+    });
+  });
+  linhas.sort((a,b)=> a.nome.localeCompare(b.nome) || a.data.localeCompare(b.data));
+  const root = document.getElementById("calendar-print-root");
+  if(!linhas.length){
+    root.innerHTML = '<h2>Calendário de reuniões · '+esc(CAL_MENTOR)+'</h2><p>Nenhuma reunião com data definida para este mentor ainda.</p>';
+  } else {
+    let rows = linhas.map(l=>
+      '<tr><td>'+esc(l.nome)+'</td><td>'+esc(l.mentor)+'</td>'
+      + '<td>'+diaSemanaCurta(l.data)+' · '+formatarDataCurta(l.data)+'/'+l.data.slice(0,4)+'</td>'
+      + '<td>'+esc(l.hora||"—")+'</td>'
+      + '<td>'+(l.status==='realizada'?"Realizada":"Agendada")+'</td></tr>'
+    ).join("");
+    root.innerHTML = '<h2>Calendário de reuniões · '+esc(CAL_MENTOR)+'</h2>'
+      + '<p>'+linhas.length+' reunião(ões) com data definida, ordenadas por colaborador.</p>'
+      + '<table><thead><tr><th>Colaborador</th><th>Mentor</th><th>Data</th><th>Horário</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+  document.body.classList.add("printing-calendar");
+  window.print();
+  setTimeout(()=>document.body.classList.remove("printing-calendar"), 500);
+}
+
+/* ---- grade de ciclos (hub) ---- */
+function abrirHub(nome){
+  EDITING = nome; ANO_VISIVEL = ANO_PADRAO;
+  document.getElementById("hub-voltar").hidden = false;
+  renderHub();
+  showScreen("hub");
+}
+function hubVoltar(){ renderCards(); showScreen("gestor"); }
+/* Imagens do banner por ciclo (com filtro verde, estilo CEUB).
+   Quando tiver os arquivos, informe o caminho de cada ciclo abaixo.
+   Ex.: 1:"assets/imagens/ciclos/ciclo-1.jpg". Vazio = usa o gradiente da marca.
+   Se o caminho apontar para um arquivo inexistente, cai automaticamente no gradiente. */
+const CICLO_IMGS = { 1:"assets/imagens/1.png", 2:"assets/imagens/2.png", 3:"assets/imagens/3.png", 4:"assets/imagens/4.png" };
+
+function mudarAno(delta){ ANO_VISIVEL += delta; renderHub(); }
+function renderHub(){
+  document.getElementById("year-label").textContent = ANO_VISIVEL;
+  const ehGestor = (ROLE==="gestor");
+  document.getElementById("hub-eyebrow").textContent = ehGestor ? "Linha do tempo do mentorado" : "Sua linha do tempo";
+  document.getElementById("hub-title").innerHTML = "Formulários de " + '<span class="lime">'+esc(EDITING)+'</span>';
+  document.getElementById("hub-who").innerHTML = ehGestor
+    ? 'Avaliando <b>'+esc(EDITING)+'</b>'
+    : '<b>'+esc(EDITING)+'</b><span class="pill">Colaborador</span>';
+
+  const root = document.getElementById("cycles-root");
+  let html = "";
+  for(let c=1;c<=4;c++){
+    const meses = mesesDoCiclo(c);
+    let doneCount = 0;
+    let cellsHtml = "";
+    meses.forEach(m=>{
+      const rec = loadForm(EDITING, ANO_VISIVEL, m);
+      const st = statusRec(rec);
+      if(st==="done") doneCount++;
+      const stTxt = st==="done" ? "Avaliado" : st==="resp" ? "Respondido" : st==="incompleto" ? "Incompleto" : "Sem avaliação";
+      const isNow = (ANO_VISIVEL===CUR.ano && m===CUR.mes);
+      const reun = rec && rec.reuniao ? rec.reuniao : null;
+      // data/hora empilhadas (data em cima, horário embaixo)
+      let dtTop, dtBot, reunClass;
+      if(reun && reun.status==='realizada'){
+        const dCurta = formatarDataCurta(reun.data);
+        dtTop = dCurta ? dCurta : "Realizada";
+        dtBot = reun.hora ? reun.hora : "";
+        reunClass = "rc-done";
+      } else if(reun && reun.status==='nao_houve'){
+        dtTop = "—";
+        dtBot = "s/ reunião";
+        reunClass = "rc-skip";
+      } else if(reun && reun.status==='agendada' && reun.data){
+        const dCurta = formatarDataCurta(reun.data);
+        dtTop = dCurta ? dCurta : "Agendada";
+        dtBot = reun.hora ? reun.hora : "";
+        reunClass = "rc-agendada";
+      } else {
+        dtTop = "Definir";
+        dtBot = "reunião";
+        reunClass = "rc-empty";
+      }
+      const dtInner = '<span class="mc-dt-d">'+esc(dtTop)+'</span><span class="mc-dt-h">'+esc(dtBot)+'</span>';
+      const dtHtml = ROLE==="gestor"
+        ? '<button type="button" class="mc-dt '+reunClass+'" onclick="event.stopPropagation();abrirModalReuniao('+ANO_VISIVEL+','+m+')">'+dtInner+'</button>'
+        : (reun && reun.status ? '<div class="mc-dt '+reunClass+'">'+dtInner+'</div>' : '');
+      cellsHtml += '<div class="month-cell mc-'+st+(isNow?" mc-current":"")+'">'
+            + '<div class="mc-main" onclick="abrirFormPeriodo('+ANO_VISIVEL+','+m+')">'
+            +   '<span class="mc-m">'+MESES[m-1]+'</span>'
+            +   '<span class="mc-s"><i></i>'+stTxt+'</span>'
+            + '</div>'
+            + '<div class="mc-num">'+String(m).padStart(2,'0')+'</div>'
+            + dtHtml
+            + '</div>';
+    });
+    const cImg = CICLO_IMGS[c];
+    const bandHtml = cImg
+      ? '<div class="ch-band"><img src="'+cImg+'" alt="Ciclo '+c+'" loading="lazy" onerror="this.closest(\'.ch-band\').classList.add(\'ch-fallback\')"><div class="ch-band-filter"></div></div>'
+      : '<div class="ch-band"></div>';
+    html += '<div class="cycle-col">'
+          + '<div class="ch"><b>Ciclo '+c+'</b><div class="ch-year">'+ANO_VISIVEL+'</div>'+bandHtml+'</div>'
+          + '<div class="cb">'+cellsHtml+'</div>'
+          + '<div class="cf'+(doneCount===3?' done':'')+'">'+doneCount+' de 3 avaliados</div>'
+          + '</div>';
+  }
+  root.innerHTML = html;
+  renderMentorBox();
+}
+
+/* ---- card do mentor do ciclo atual (topo direito) ---- */
+function renderMentorBox(){
+  const box = document.getElementById("mentor-box");
+  if(!box || !EDITING) return;
+  const ciclo = cicloDe(CUR.mes);                 // ciclo atual do calendário
+  const info = MENTOR_INFO[mentorDoCiclo(EDITING, ciclo)];
+  const st = reunioesCicloStats(EDITING, ANO_VISIVEL, ciclo);
+  const temBase = st.deveriam > 0;
+  const pct = temBase ? Math.round(st.realizadas/st.deveriam*100) : 0;
+  const primeiro = (EDITING||"").split(" ")[0];
+  const frase = (ROLE==="gestor") ? ("O mentor de "+esc(primeiro)+" neste ciclo") : "O seu mentor neste ciclo";
+  const countTxt = temBase ? (st.realizadas+" de "+st.deveriam+" reuniões") : "ciclo ainda não começou";
+  const pctTxt = temBase ? (pct+"%") : "—";
+  box.innerHTML =
+      '<div class="mentor-eyebrow">'+frase+'</div>'
+    + '<div class="mentor-card">'
+    +   '<div class="mentor-info">'
+    +     '<div class="mentor-name">'+esc(info.nome)+'</div>'
+    +     '<div class="mentor-role">'+esc(info.cargo)+'</div>'
+    +     '<div class="mentor-meet">'
+    +       '<div class="mm-top"><span class="mm-pct">'+pctTxt+'</span><span class="mm-count">'+countTxt+'</span></div>'
+    +       '<div class="mm-track"><div class="mm-fill" style="width:'+pct+'%"></div></div>'
+    +       '<div class="mm-cap">realizadas neste ciclo (1 por mês)</div>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="mentor-photo"><img src="'+info.img+'" alt="'+esc(info.nome)+'"></div>'
+    + '</div>';
+  requestAnimationFrame(alignMentorBox);
+}
+function alignMentorBox(){
+  const box = document.getElementById("mentor-box");
+  if(!box || box.offsetParent===null) return;   // hub não visível
+  const cols = document.querySelectorAll("#cycles-root .cycle-col");
+  if(!cols.length) return;
+  const c4 = cols[cols.length-1].getBoundingClientRect();
+  const wrapR = box.parentElement.getBoundingClientRect();
+  box.style.width = Math.round(c4.width)+"px";
+  box.style.right = Math.round(wrapR.right - c4.right)+"px";
+}
+window.addEventListener("resize", alignMentorBox);
+
+/* ---- abrir formulário de um período ---- */
+function abrirFormPeriodo(ano,mes){
+  PERIODO = { ano:ano, mes:mes };
+  const rec = loadForm(EDITING,ano,mes) || novoRegistro(EDITING,ano,mes);
+  aplicarPapelUI();
+  preencherForm(rec);
+  const cic = cicloDe(mes);
+  document.getElementById("pb-cycle").textContent = "Ciclo " + cic;
+  document.getElementById("pb-month").textContent = MESES[mes-1] + " de " + ano;
+  document.getElementById("app-who").innerHTML = ROLE==="colab"
+    ? 'Formulário de <b>'+esc(EDITING)+'</b><span class="pill">Colaborador</span>'
+    : 'Avaliando <b>'+esc(EDITING)+'</b>';
+  document.getElementById("save-status").textContent = rec.updatedAt
+    ? "Última gravação: " + new Date(rec.updatedAt).toLocaleString("pt-BR")
+    : (ROLE==="colab" ? "Formulário novo. Preencha e clique em Salvar." : "Formulário ainda não respondido pelo colaborador.");
+  showScreen("app");
+  atualizarAlertaForm();
+  setupJumpEval();
+}
+function voltarHub(){ renderHub(); showScreen("hub"); }
+
+/* =========================================================
+   TRAVAS POR PAPEL
+========================================================== */
+function aplicarPapelUI(){
+  const colab = (ROLE === "colab");
+  document.getElementById("metodo").style.display = colab ? "" : "none";
+  document.getElementById("inst3").style.display = colab ? "none" : "";
+
+  document.querySelectorAll(".sc-self").forEach(s=> s.disabled = !colab);
+  document.querySelectorAll(".sc-ment").forEach(s=> s.disabled = colab);
+  document.getElementById("m_unit").disabled = !colab;
+  document.getElementById("m_data").readOnly = !colab;
+
+  document.querySelectorAll("#inst2 input, #inst2 textarea").forEach(el=>{
+    if(el.id === "p_nome" || el.id === "p_ciclo"){ el.readOnly = true; return; }
+    el.readOnly = !colab;
+  });
+  document.getElementById("btn-add-goal").style.display = colab ? "" : "none";
+
+  document.getElementById("i1-desc-colab").hidden = !colab;
+  document.getElementById("i1-desc-gestor").hidden = colab;
+  document.getElementById("i1-lock-tag").hidden = colab;
+  document.getElementById("i2-lock-tag").hidden = colab;
+}
+
+/* =========================================================
+   PREENCHER / COLETAR
+========================================================== */
+function val(id){ const e=document.getElementById(id); return e?e.value:""; }
+function set(id,v){ const e=document.getElementById(id); if(e) e.value = v||""; }
+function esc(s){ return (s||"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function preencherForm(rec){
+  set("m_nome", rec.nome); set("p_nome", rec.nome);
+  set("m_unit", rec.funcao); set("m_data", rec.data || isoHoje());
+  set("m_mentor_view", mentorDoCiclo(rec.nome, cicloDe(PERIODO.mes)));
+  set("p_ciclo", "Ciclo " + cicloDe(PERIODO.mes) + " · " + MESES[PERIODO.mes-1] + " de " + PERIODO.ano);
+
+  EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{
+    const id = `e${ei}i${ii}`;
+    set(id+"_self", (rec.self && rec.self[id]) || "");
+    set(id+"_ment", (rec.ment && rec.ment[id]) || "");
+  }));
+  EIXOS.forEach((_,ei)=>calcGap(ei));
+
+  const p = rec.pdi || {};
+  set("p_forcas",p.forcas); set("p_gaps",p.gaps); set("p_aspiracao",p.aspiracao);
+  set("p_70",p.p70); set("p_20",p.p20); set("p_10",p.p10);
+  montarCompromissos(p.compromissos || []);
+
+  const r = rec.roteiro || {};
+  set("r_mentor", mentorDoCiclo(rec.nome, cicloDe(PERIODO.mes))); set("r_data", r.data);
+  set("r_checkin",r.checkin); set("r_revisao",r.revisao); set("r_goal",r.goal);
+  set("r_reality",r.reality); set("r_options",r.options); set("r_way",r.way); set("r_registro",r.registro);
+}
+function montarCompromissos(lista){
+  const root = document.getElementById("goals-root");
+  root.innerHTML = "";
+  const arr = (lista && lista.length) ? lista : [{txt:"",prazo:""}];
+  arr.forEach(c => root.appendChild(goalRow(c.txt, c.prazo)));
+}
+function goalRow(txt, prazo){
+  const row = document.createElement("div");
+  row.className = "goal-row";
+  row.innerHTML =
+    '<div class="field"><label>Compromisso</label><input type="text" placeholder="Ação concreta"></div>'+
+    '<div class="field"><label>Prazo</label><input type="date"></div>'+
+    '<button class="rm" onclick="this.parentElement.remove();atualizarAlertaForm()" title="Remover">×</button>';
+  row.querySelector('input[type=text]').value = txt || "";
+  row.querySelector('input[type=date]').value = prazo || "";
+  if(ROLE === "gestor"){
+    row.querySelectorAll("input").forEach(i=>i.readOnly = true);
+    row.querySelector(".rm").style.display = "none";
+  } else {
+    row.querySelectorAll("input").forEach(i=>i.addEventListener("input", atualizarAlertaForm));
+  }
+  return row;
+}
+function addGoal(){
+  const root = document.getElementById("goals-root");
+  if(root.children.length >= 2){ toast("Máximo de 2 compromissos por sessão."); return; }
+  root.appendChild(goalRow("",""));
+  atualizarAlertaForm();
+}
+function coletarCompromissos(){
+  return [...document.querySelectorAll("#goals-root .goal-row")].map(r=>({
+    txt: r.querySelector('input[type=text]').value.trim(),
+    prazo: r.querySelector('input[type=date]').value
+  })).filter(c=>c.txt || c.prazo);
+}
+
+/* =========================================================
+   SALVAR
+========================================================== */
+function salvar(){
+  if(!EDITING || !PERIODO) return;
+  const {ano,mes} = PERIODO;
+  const rec = loadForm(EDITING,ano,mes) || novoRegistro(EDITING,ano,mes);
+  rec.nome = EDITING; rec.ano = ano; rec.mes = mes;
+
+  if(ROLE === "colab"){
+    rec.funcao = val("m_unit");
+    rec.data = val("m_data");
+    const self = {};
+    EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{ const id=`e${ei}i${ii}`; const v=val(id+"_self"); if(v) self[id]=v; }));
+    rec.self = self;
+    rec.pdi = {
+      forcas:val("p_forcas"), gaps:val("p_gaps"), aspiracao:val("p_aspiracao"),
+      p70:val("p_70"), p20:val("p_20"), p10:val("p_10"), compromissos: coletarCompromissos()
+    };
+    rec.selfCompleto = colabCompleto();
+    rec.selfUpdatedAt = Date.now();   // marca de tempo do lado do colaborador (merge no servidor)
+  } else {
+    const ment = {};
+    EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{ const id=`e${ei}i${ii}`; const v=val(id+"_ment"); if(v) ment[id]=v; }));
+    rec.ment = ment;
+    rec.mentor = val("r_mentor");
+    rec.roteiro = {
+      data:val("r_data"), checkin:val("r_checkin"), revisao:val("r_revisao"),
+      goal:val("r_goal"), reality:val("r_reality"), options:val("r_options"),
+      way:val("r_way"), registro:val("r_registro")
+    };
+    rec.mentCompleto = mentorSecao1Completo();
+    rec.mentUpdatedAt = Date.now();   // marca de tempo do lado do gestor (merge no servidor)
+  }
+  saveForm(EDITING,ano,mes,rec);
+  set("m_mentor_view", mentorDoCiclo(EDITING, cicloDe(mes)));
+  atualizarAlertaForm();
+  if(ROLE === "colab"){
+    document.getElementById("save-status").innerHTML = rec.selfCompleto
+      ? "<b>Enviado e salvo</b> em " + new Date(rec.updatedAt).toLocaleString("pt-BR") + "."
+      : "<b>Salvo como rascunho</b> em " + new Date(rec.updatedAt).toLocaleString("pt-BR") + ". Complete as seções 01 e 02 para o formulário ser considerado enviado.";
+    toast(rec.selfCompleto ? "Formulário enviado e salvo" : "Respostas salvas, mas o formulário ainda está incompleto");
+  } else {
+    document.getElementById("save-status").innerHTML = rec.mentCompleto
+      ? "<b>Avaliação completa</b>, salva em " + new Date(rec.updatedAt).toLocaleString("pt-BR") + "."
+      : "<b>Salvo</b> em " + new Date(rec.updatedAt).toLocaleString("pt-BR") + ". Faltam itens da Seção 01 para o colaborador receber um feedback completo.";
+    toast(rec.mentCompleto ? "Avaliação salva" : "Salvo, mas a Seção 01 ainda está incompleta");
+  }
+}
+
+/* =========================================================
+   VALIDAÇÃO DE PREENCHIMENTO
+========================================================== */
+function colabCompleto(){
+  const meta1Ok = val("m_unit").trim() !== "" && val("m_data").trim() !== "";
+  let selfOk = true;
+  EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{ if(!val(`e${ei}i${ii}_self`)) selfOk = false; }));
+  const pdiFields = ["p_forcas","p_gaps","p_aspiracao","p_70","p_20","p_10"];
+  const pdiOk = pdiFields.every(id => val(id).trim() !== "");
+  const compromissos = coletarCompromissos();
+  const compOk = compromissos.length > 0 && compromissos.every(c => c.txt && c.prazo);
+  return meta1Ok && selfOk && pdiOk && compOk;
+}
+function mentorSecao1Completo(){
+  let ok = true;
+  EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{ if(!val(`e${ei}i${ii}_ment`)) ok = false; }));
+  return ok;
+}
+function atualizarAlertaForm(){
+  const wrap = document.getElementById("form-alert-wrap");
+  const box = document.getElementById("form-alert");
+  if(!wrap || !box || !PERIODO) return;
+  if(ROLE === "colab"){
+    if(colabCompleto()){ wrap.hidden = true; return; }
+    wrap.hidden = false;
+    box.innerHTML = "<b>Formulário incompleto.</b> É obrigatório preencher tudo nas seções 01 (Matriz · Autoavaliação) e 02 (Ficha de PDI). Suas respostas ficam salvas automaticamente, mas o formulário só passa a contar como enviado quando tudo estiver preenchido.";
+  } else if(ROLE === "gestor"){
+    if(mentorSecao1Completo()){ wrap.hidden = true; return; }
+    wrap.hidden = false;
+    box.innerHTML = "<b>Avaliação incompleta.</b> Preencha todas as competências da coluna Mentor na Seção 01 para garantir que o colaborador receba um feedback completo de mentoria.";
+  } else {
+    wrap.hidden = true;
+  }
+}
+
+/* =========================================================
+   BOTÃO "IR PARA AVALIAÇÃO": some ao chegar no Instrumento 01
+========================================================== */
+let JUMP_OBS = null;
+function setupJumpEval(){
+  const btn = document.getElementById("btn-jump-eval");
+  const alvo = document.getElementById("inst1");
+  if(!btn || !alvo || !("IntersectionObserver" in window)) return;
+  if(JUMP_OBS) JUMP_OBS.disconnect();
+  JUMP_OBS = new IntersectionObserver(entries=>{
+    entries.forEach(entry=> btn.classList.toggle("is-hidden", entry.isIntersecting));
+  }, { threshold: 0.15 });
+  JUMP_OBS.observe(alvo);
+}
+
+/* =========================================================
+   MODAL GENÉRICO
+========================================================== */
+function openModal(html){
+  document.getElementById("modal-box").innerHTML = html;
+  document.getElementById("modal-overlay").hidden = false;
+}
+function closeModal(){
+  document.getElementById("modal-overlay").hidden = true;
+  document.getElementById("modal-box").innerHTML = "";
+  MODAL_CTX = null; CONFIRM_ACTION = null;
+}
+function confirmModal(titulo, msg, onOk, okLabel){
+  CONFIRM_ACTION = onOk;
+  const html = '<div class="modal-head">'+esc(titulo)+'</div>'
+    + '<div class="modal-sub">'+esc(msg)+'</div>'
+    + '<div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>'
+    + '<button class="btn btn-danger" onclick="runConfirm()">'+esc(okLabel||"Confirmar")+'</button></div>';
+  openModal(html);
+}
+function runConfirm(){ const fn = CONFIRM_ACTION; closeModal(); if(fn) fn(); }
+
+/* =========================================================
+   MODAL DE REUNIÃO
+   Reutilizado pela grade de ciclos (hub) e pela aba de Calendário.
+   Um terceiro estado, "Agendada", cobre reuniões marcadas com
+   antecedência: tem data/hora mas ainda não conta nas estatísticas
+   de % de reuniões (só "Realizada" e "Não houve" contam).
+========================================================== */
+function abrirModalReuniao(ano, mes, nomeParam){
+  const nome = nomeParam || EDITING;
+  const mentor = nomeParam ? CAL_MENTOR : mentorDoCiclo(nome, cicloDe(mes));
+  MODAL_CTX = { ano:ano, mes:mes, nome:nome, mentor:mentor, origin: nomeParam ? "calendar" : "hub" };
+  const rec = loadForm(nome,ano,mes) || novoRegistro(nome,ano,mes);
+  const r = rec.reuniao || { status:null, data:"", hora:"" };
+  const statusAtual = r.status || "agendada";
+  const subLinha = nomeParam
+    ? ('Mentor: <b style="color:var(--white)">'+esc(mentor)+'</b> · '+MESES[mes-1]+' de '+ano)
+    : (MESES[mes-1]+' de '+ano+' · Ciclo '+cicloDe(mes));
+  const html =
+    '<div class="modal-head">Reunião · '+esc(nome)+'</div>'
+    + '<div class="modal-sub">'+subLinha+'</div>'
+    + '<div class="meet-toggle meet-toggle3">'
+    +   '<button type="button" class="mt-btn'+(statusAtual==='agendada'?' active':'')+'" id="mt-agendada" onclick="toggleReuniaoStatus(\'agendada\')">Agendada</button>'
+    +   '<button type="button" class="mt-btn'+(statusAtual==='realizada'?' active':'')+'" id="mt-sim" onclick="toggleReuniaoStatus(\'realizada\')">Realizada</button>'
+    +   '<button type="button" class="mt-btn'+(statusAtual==='nao_houve'?' active':'')+'" id="mt-nao" onclick="toggleReuniaoStatus(\'nao_houve\')">Não houve</button>'
+    + '</div>'
+    + '<div class="field-row" id="mt-datahora" style="'+(statusAtual==='nao_houve'?'opacity:.4;pointer-events:none':'')+'">'
+    +   '<div class="field"><label>Data da reunião</label><input type="date" id="mt-data" value="'+esc(r.data||"")+'" oninput="atualizarGradeHorarios()"></div>'
+    +   '<div class="field"><label>Horário</label><input type="time" id="mt-hora" value="'+esc(r.hora||"")+'" oninput="atualizarGradeHorarios()"></div>'
+    + '</div>'
+    + '<div class="time-grid" id="mt-time-grid"></div>'
+    + '<div class="time-warn" id="mt-time-warn" hidden></div>'
+    + '<div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>'
+    +   '<button class="btn btn-primary" onclick="salvarReuniao()">Salvar</button></div>';
+  openModal(html);
+  window._mtStatus = statusAtual;
+  atualizarGradeHorarios();
+}
+function toggleReuniaoStatus(s){
+  window._mtStatus = s;
+  document.getElementById("mt-agendada").classList.toggle("active", s==="agendada");
+  document.getElementById("mt-sim").classList.toggle("active", s==="realizada");
+  document.getElementById("mt-nao").classList.toggle("active", s==="nao_houve");
+  const dh = document.getElementById("mt-datahora");
+  const desabilitado = (s==="nao_houve");
+  dh.style.opacity = desabilitado ? ".4" : "1";
+  dh.style.pointerEvents = desabilitado ? "none" : "";
+  atualizarGradeHorarios();
+}
+function salvarReuniao(){
+  if(!MODAL_CTX) return;
+  const {ano, mes, nome, origin} = MODAL_CTX;
+  const rec = loadForm(nome,ano,mes) || novoRegistro(nome,ano,mes);
+  const status = window._mtStatus || "agendada";
+  rec.nome = nome; rec.ano = ano; rec.mes = mes;
+  rec.reuniao = {
+    status: status,
+    data: status==="nao_houve" ? "" : val("mt-data"),
+    hora: status==="nao_houve" ? "" : val("mt-hora")
+  };
+  rec.mentUpdatedAt = Date.now();   // reunião é do lado do gestor (merge no servidor)
+  saveForm(nome,ano,mes,rec);
+  closeModal();
+  if(origin==="calendar"){ renderCalendario(); } else { renderHub(); }
+  toast("Reunião registrada");
+}
+
+/* ---- horários conflitantes: mesmo mentor, mesma data, menos de 1h de diferença ---- */
+function minutosDe(hhmm){
+  const p = (hhmm||"00:00").split(":");
+  return (parseInt(p[0],10)||0)*60 + (parseInt(p[1],10)||0);
+}
+function reuniaoConflito(mentor, data, hora, excluirNome){
+  if(!data || !hora) return null;
+  let achado = null;
+  getColaboradores().forEach(c=>{
+    if(achado || c.nome===excluirNome) return;
+    formsDe(c.nome).forEach(f=>{
+      if(achado || !f.rec || !f.rec.reuniao) return;
+      const r = f.rec.reuniao;
+      if(!r.data || !r.hora || r.status==='nao_houve') return;
+      if(r.data !== data) return;
+      if(mentorDoCiclo(c.nome, cicloDe(f.mes)) !== mentor) return;
+      if(Math.abs(minutosDe(r.hora) - minutosDe(hora)) < 60) achado = {nome:c.nome, hora:r.hora};
+    });
+  });
+  return achado;
+}
+function atualizarGradeHorarios(){
+  const gridEl = document.getElementById("mt-time-grid");
+  if(!gridEl || !MODAL_CTX) return;
+  const data = val("mt-data");
+  if(!data){ gridEl.innerHTML = ""; checarConflitoHorario(); return; }
+  const horaAtual = val("mt-hora");
+  let html = "";
+  for(let h=8; h<=18; h++){
+    ["00","30"].forEach(mm=>{
+      if(h===18 && mm==="30") return;
+      const t = String(h).padStart(2,"0")+":"+mm;
+      const conflito = reuniaoConflito(MODAL_CTX.mentor, data, t, MODAL_CTX.nome);
+      const sel = (t===horaAtual);
+      html += '<button type="button" class="time-chip '+(conflito?"conflict":"free")+(sel?" selected":"")+'" '
+        + 'title="'+(conflito?"Conflita com "+esc(conflito.nome)+" às "+conflito.hora:"Disponível")+'" '
+        + 'onclick="escolherHorarioModal(\''+t+'\')">'+t+'</button>';
+    });
+  }
+  gridEl.innerHTML = html;
+  checarConflitoHorario();
+}
+function escolherHorarioModal(t){
+  set("mt-hora", t);
+  atualizarGradeHorarios();
+}
+function checarConflitoHorario(){
+  if(!MODAL_CTX) return;
+  const warnBox = document.getElementById("mt-time-warn");
+  const timeInput = document.getElementById("mt-hora");
+  if(!warnBox || !timeInput) return;
+  const data = val("mt-data"), hora = val("mt-hora");
+  const conflito = reuniaoConflito(MODAL_CTX.mentor, data, hora, MODAL_CTX.nome);
+  if(conflito){
+    warnBox.hidden = false;
+    warnBox.innerHTML = '⚠ Esse horário conflita com a reunião de <b>'+esc(conflito.nome)+'</b> às <b>'+conflito.hora+'</b> (menos de 1h de diferença).';
+    timeInput.classList.add("conflict-input");
+  } else {
+    warnBox.hidden = true;
+    timeInput.classList.remove("conflict-input");
+  }
+}
+
+/* =========================================================
+   CONFIGURAÇÕES (gestor)
+========================================================== */
+function abrirSettings(){ renderSettings(); showScreen("settings"); }
+function fecharSettings(){ renderCards(); showScreen("gestor"); }
+
+function renderSettings(){
+  refreshColabDatalist();
+  const list = getColaboradores();
+  const root = document.getElementById("colab-list");
+  root.innerHTML = "";
+  list.forEach(colab=>{
+    const row = document.createElement("div");
+    row.className = "colab-row";
+    const nameDiv = document.createElement("div");
+    nameDiv.className = "cr-name";
+    nameDiv.innerHTML = esc(colab.nome) + (colab.cargo ? ' <span class="cr-cargo">'+esc(colab.cargo)+'</span>' : '');
+    const actions = document.createElement("div");
+    actions.className = "cr-actions";
+    const btnEdit = document.createElement("button");
+    btnEdit.className = "btn btn-ghost sm"; btnEdit.textContent = "Editar";
+    btnEdit.onclick = ()=>iniciarEdicaoColab(row, colab);
+    const btnDel = document.createElement("button");
+    btnDel.className = "btn btn-ghost sm danger"; btnDel.textContent = "Excluir";
+    btnDel.onclick = ()=>pedirExclusaoColaborador(colab.nome);
+    actions.appendChild(btnEdit); actions.appendChild(btnDel);
+    row.appendChild(nameDiv); row.appendChild(criarSeletorMentor(colab)); row.appendChild(actions);
+    root.appendChild(row);
+  });
+}
+function setMentorImpar(nome, mImpar){
+  const list = getColaboradores();
+  const idx = list.findIndex(c=>c.nome===nome);
+  if(idx>-1){ list[idx].mentorImpar = mImpar; setColaboradores(list); }
+}
+/* distribui metade Val / metade Luiz nos ciclos ímpares (o inverso vem automático nos pares) */
+function distribuirMentores(list, aleatorio){
+  const ordem = list.map((_,i)=>i);
+  if(aleatorio){
+    for(let i=ordem.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=ordem[i]; ordem[i]=ordem[j]; ordem[j]=t; }
+  }
+  const metade = Math.floor(list.length/2);
+  ordem.forEach((idx,pos)=>{ list[idx].mentorImpar = (pos < metade) ? "Val" : "Luiz"; });
+  return list;
+}
+function sortearMentores(){
+  confirmModal(
+    "Sortear mentores",
+    "Isso redistribui aleatoriamente os mentores de todos os colaboradores: 7 para Val e 7 para Luiz nos ciclos ímpares (e o inverso nos pares). A ideia é usar só uma vez e não repetir. Deseja continuar?",
+    ()=>{ const list=getColaboradores(); distribuirMentores(list, true); setColaboradores(list); renderSettings(); toast("Mentores sorteados: 7 para Val, 7 para Luiz"); },
+    "Sortear agora"
+  );
+}
+function criarSeletorMentor(colab){
+  const wrap = document.createElement("div");
+  wrap.className = "cr-mentor";
+  const impar = mentorImparDe(colab);
+  const par = outroMentor(impar);
+  const optsFor = sel => MENTORES.map(m=>'<option value="'+m+'"'+(m===sel?' selected':'')+'>'+m+'</option>').join('');
+  wrap.innerHTML =
+      '<div class="cm-grp cm-odd"><label>Ciclos 1 e 3</label><select>'+optsFor(impar)+'</select></div>'
+    + '<div class="cm-grp cm-even"><label>Ciclos 2 e 4</label><select>'+optsFor(par)+'</select></div>';
+  const selOdd = wrap.querySelector('.cm-odd select');
+  const selEven = wrap.querySelector('.cm-even select');
+  selOdd.onchange = ()=>{ selEven.value = outroMentor(selOdd.value); setMentorImpar(colab.nome, selOdd.value); toast("Mentor de "+colab.nome.split(' ')[0]+" atualizado"); };
+  selEven.onchange = ()=>{ const imp = outroMentor(selEven.value); selOdd.value = imp; setMentorImpar(colab.nome, imp); toast("Mentor de "+colab.nome.split(' ')[0]+" atualizado"); };
+  return wrap;
+}
+function iniciarEdicaoColab(row, colab){
+  row.innerHTML = "";
+  const inpNome = document.createElement("input");
+  inpNome.type = "text"; inpNome.className = "cr-edit-input"; inpNome.value = colab.nome; inpNome.placeholder = "Nome";
+  const inpCargo = document.createElement("input");
+  inpCargo.type = "text"; inpCargo.className = "cr-edit-input"; inpCargo.value = colab.cargo||""; inpCargo.placeholder = "Cargo";
+  const wrapName = document.createElement("div");
+  wrapName.className = "cr-edit-fields"; wrapName.appendChild(inpNome); wrapName.appendChild(inpCargo);
+  const actions = document.createElement("div");
+  actions.className = "cr-actions";
+  const btnSave = document.createElement("button");
+  btnSave.className = "btn btn-primary sm"; btnSave.textContent = "Salvar";
+  btnSave.onclick = ()=>{
+    const novoNome = inpNome.value.trim();
+    const novoCargo = inpCargo.value.trim();
+    if(!novoNome){ toast("Digite um nome."); return; }
+    if(novoNome!==colab.nome && getColaboradores().some(c=>c.nome===novoNome)){ toast("Já existe um colaborador com esse nome."); return; }
+    renomearColaborador(colab.nome, novoNome, novoCargo);
+    renderSettings();
+    toast("Colaborador atualizado");
+  };
+  const btnCancel = document.createElement("button");
+  btnCancel.className = "btn btn-ghost sm"; btnCancel.textContent = "Cancelar";
+  btnCancel.onclick = ()=>renderSettings();
+  actions.appendChild(btnSave); actions.appendChild(btnCancel);
+  row.appendChild(wrapName); row.appendChild(actions);
+  inpNome.focus();
+}
+function renomearColaborador(nomeAntigo, novoNome, novoCargo){
+  allKeys().forEach(k=>{
+    const p = parseKey(k);
+    if(p.nome===nomeAntigo){
+      const rec = JSON.parse(localStorage.getItem(k));
+      rec.nome = novoNome;
+      localStorage.setItem(keyOf(novoNome, p.ano, p.mes), JSON.stringify(rec));
+      localStorage.removeItem(k);
+    }
+  });
+  const list = getColaboradores();
+  const idx = list.findIndex(c=>c.nome===nomeAntigo);
+  if(idx>-1) list[idx] = {nome:novoNome, cargo:novoCargo, mentorImpar:list[idx].mentorImpar}; else list.push({nome:novoNome, cargo:novoCargo});
+  setColaboradores(list);
+}
+function pedirExclusaoColaborador(nome){
+  confirmModal(
+    "Excluir colaborador",
+    'Tem certeza que quer excluir "'+nome+'"? Todos os formulários e dados de reunião dele serão apagados permanentemente.',
+    ()=>{ excluirColaborador(nome); renderSettings(); toast("Colaborador excluído"); },
+    "Excluir"
+  );
+}
+function excluirColaborador(nome){
+  allKeys().forEach(k=>{ if(parseKey(k).nome===nome) localStorage.removeItem(k); });
+  setColaboradores(getColaboradores().filter(c=>c.nome!==nome));
+}
+function onAdicionarColaborador(){
+  const inpN = document.getElementById("novo-colab-nome");
+  const inpC = document.getElementById("novo-colab-cargo");
+  const nome = inpN.value.trim();
+  const cargo = inpC.value.trim();
+  if(!nome){ toast("Digite um nome."); return; }
+  if(getColaboradores().some(c=>c.nome===nome)){ toast("Colaborador já existe."); return; }
+  const list = getColaboradores(); list.push({nome:nome, cargo:cargo}); setColaboradores(list);
+  inpN.value = ""; inpC.value = "";
+  renderSettings();
+  toast("Colaborador adicionado");
+}
+function pedirExclusaoTotal(){
+  confirmModal(
+    "Excluir todos os dados",
+    "Isso vai apagar TODOS os formulários, avaliações e reuniões de TODOS os colaboradores. A lista de nomes continua. Deseja continuar?",
+    ()=>{
+      confirmModal(
+        "Confirmação final",
+        "Essa ação não pode ser desfeita. Você vai perder realmente todos os dados salvos. Confirma a exclusão?",
+        ()=>excluirTodosDados(),
+        "Sim, excluir tudo"
+      );
+    },
+    "Continuar"
+  );
+}
+function excluirTodosDados(){
+  allKeys().forEach(k=>localStorage.removeItem(k));
+  renderSettings();
+  toast("Todos os dados foram apagados.");
+}
+
+/* =========================================================
+   BACKUP · exporta um HTML autossuficiente com os dados embutidos
+========================================================== */
+function coletarDadosBackup(){
+  const D = {};
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.indexOf("afinar_v4")===0) D[k] = localStorage.getItem(k);
+  }
+  return D;
+}
+async function exportarBackupHTML(){
+  try{
+    // 1) HTML puro do app (sem as mutações de DOM feitas em runtime)
+    let html;
+    try{ html = await fetch(location.href,{cache:"no-store"}).then(r=>r.text()); }
+    catch(e){ html = "<!DOCTYPE html>\n" + document.documentElement.outerHTML; }
+
+    // 2) script que restaura os dados ao abrir o backup (só se o navegador estiver vazio, não sobrescreve dados vivos)
+    const dados = coletarDadosBackup();
+    const json = JSON.stringify(dados).replace(/<\/script>/gi, "<\\/script>");
+    const seed = '<script id="afinar-backup-seed">(function(){try{var D=' + json
+      + ';for(var k in D){if(localStorage.getItem(k)===null)localStorage.setItem(k,D[k]);}}catch(e){}})();<\/script>';
+
+    // injeta o seed no fim do <head>. A remoção de um seed anterior é feita SÓ na região do <head>,
+    // porque o texto "<script id=afinar-backup-seed>" também aparece literalmente no JS do app (no corpo),
+    // e um replace global apagaria parte do código.
+    const headEnd = html.indexOf("</head>");
+    if(headEnd > -1){
+      let head = html.slice(0, headEnd).replace(/<script id="afinar-backup-seed">[\s\S]*?<\/script>\s*/i, "");
+      html = head + seed + "\n" + html.slice(headEnd);   // slice(headEnd) começa em "</head>"
+    } else {
+      html = seed + html;
+    }
+
+    // 3) nome com data/hora
+    const now = new Date(), pad = n=>String(n).padStart(2,"0");
+    const stamp = now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate())+"_"+pad(now.getHours())+"h"+pad(now.getMinutes());
+    const fname = "afinar-mentoria-backup_"+stamp+".html";
+    const blob = new Blob([html], {type:"text/html"});
+
+    // 4) escolher onde salvar (Chrome/Edge) ou download automático
+    if(window.showSaveFilePicker){
+      try{
+        const handle = await window.showSaveFilePicker({
+          suggestedName: fname,
+          types:[{description:"Backup HTML", accept:{"text/html":[".html"]}}]
+        });
+        const w = await handle.createWritable();
+        await w.write(blob); await w.close();
+        toast("Backup salvo.");
+        return;
+      }catch(e){
+        if(e && e.name==="AbortError") return;   // usuário cancelou
+        // qualquer outra falha cai no download abaixo
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = fname; document.body.appendChild(a); a.click();
+    a.remove(); setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    toast("Backup baixado.");
+  }catch(err){
+    toast("Não foi possível gerar o backup: " + (err && err.message ? err.message : err));
+  }
+}
+
+/* =========================================================
+   UTIL
+========================================================== */
+let toastT = null;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+/* =========================================================
+   INIT
+========================================================== */
+function migrarDados(){
+  // renomeia "Diego Faury" -> "Diego" em instalações antigas (preserva cargo/mentor e registros)
+  const df = getColaboradores().find(c=>c.nome==="Diego Faury");
+  if(df) renomearColaborador("Diego Faury","Diego", df.cargo||"");
+  // remove Thiago do sistema (uma vez) e reequilibra 7/7
+  if(getColaboradores().some(c=>c.nome==="Thiago")){
+    excluirColaborador("Thiago");
+    const l = getColaboradores();
+    distribuirMentores(l, false);
+    setColaboradores(l);
+  }
+}
+function bootAfinar(){
+  migrarDados();
+  montarMatriz();
+  refreshColabDatalist();
+  showScreen("login");
+}
+
+/* ---------------------------------------------------------------
+   SINCRONIZAÇÃO COM A NUVEM (sync.js)
+   O sync.js intercepta o localStorage e espelha na nuvem (Upstash).
+   Quando outra pessoa salva, o poll chama __afinarReload() para
+   re-renderizar a tela ativa in-place, sem F5. Não sobrescreve
+   enquanto alguém está digitando (o sync.js checa isEditing()).
+---------------------------------------------------------------- */
+window.__afinarReload = function(){
+  try{
+    refreshColabDatalist();
+    const telas = ["login","gestor","hub","settings","app","calendar"];
+    const vis = telas.find(s=>{ const el=document.getElementById("screen-"+s); return el && !el.hidden; });
+    if(vis==="gestor")       renderCards();
+    else if(vis==="hub")     renderHub();
+    else if(vis==="calendar")renderCalendario();
+    else if(vis==="settings")renderSettings();
+    else if(vis==="app" && EDITING && PERIODO) abrirFormPeriodo(PERIODO.ano, PERIODO.mes);
+  }catch(e){ console.warn("[afinar] reload", e); }
+};
+
+/* Adia o boot até a nuvem hidratar o localStorage (se sync.js estiver presente).
+   Sem sync.js (ex.: abrir o arquivo solto), boota direto do localStorage. */
+if(typeof window.__cloudHydrate === "function"){ window.__cloudHydrate(bootAfinar); }
+else { bootAfinar(); }
+</script>
+</body>
+</html>
