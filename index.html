@@ -1431,11 +1431,18 @@ function selRole(r){
   setTimeout(()=>{ document.getElementById(r==="colab"?"in-colab-nome":"in-gestor-senha").focus(); },50);
 }
 function entrarColab(){
-  const nome = document.getElementById("in-colab-nome").value.trim();
+  const digitado = document.getElementById("in-colab-nome").value.trim();
   const err = document.getElementById("err-colab");
-  if(!nome){ err.textContent = "Digite o seu nome para continuar."; return; }
+  if(!digitado){ err.textContent = "Selecione o seu nome na lista para continuar."; return; }
+  // só é possível entrar com um dos nomes JÁ cadastrados (evita colaborador fantasma).
+  // o campo de texto serve só para achar o próprio nome; a seleção é obrigatória.
+  const match = getColaboradores().find(c => c.nome.toLowerCase() === digitado.toLowerCase());
+  if(!match){
+    err.textContent = "Nome não encontrado. Selecione um dos nomes da lista.";
+    return;
+  }
   err.textContent = "";
-  ROLE = "colab"; EDITING = nome; ANO_VISIVEL = ANO_PADRAO;
+  ROLE = "colab"; EDITING = match.nome; ANO_VISIVEL = ANO_PADRAO;   // usa o nome canônico cadastrado
   document.getElementById("hub-voltar").hidden = true;
   renderHub();
   showScreen("hub");
