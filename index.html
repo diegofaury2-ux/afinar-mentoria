@@ -1517,6 +1517,72 @@ function statusNotas(rec){
 }
 
 /* =========================================================
+   SINCRONIZAÇÃO DAS ANOTAÇÕES PRIVADAS (endpoint próprio, /api/notes)
+   Separado do sync.js (que cuida do /api/state, com dados visíveis ao
+   mentor): as anotações sobem para uma chave de nuvem diferente, que
+   o /api/state nunca lê. Assim, mesmo com algum bug no app, o mentor
+   nunca recebe essas anotações — o próprio servidor nunca as devolve
+   pra quem não pediu pelo nome certo.
+   Acompanham o colaborador em qualquer máquina, mas continuam
+   invisíveis ao mentor.
+========================================================== */
+let NOTAS_SYNC_READY = false;
+let NOTAS_CLOUD_PUSH_TIMEOUT = null;
+function chavesNotasLocaisDe(nome){
+  const out = [];
+  for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if(k && k.indexOf(PREFIX_NOTAS+nome+"::")===0) out.push(k); }
+  return out;
+}
+function enviarNotasParaNuvem(nome, setObj){
+  if(!Object.keys(setObj).length) return;
+  fetch("/api/notes", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ nome:nome, set:setObj }),
+    keepalive: true
+  }).catch(()=>{});   // offline: a próxima abertura/tentativa de salvar reenvia
+}
+function agendarPushNotasNuvem(){
+  if(!NOTAS_SYNC_READY || !EDITING || ROLE!=="colab" || !NOTA_PERIODO) return;
+  clearTimeout(NOTAS_CLOUD_PUSH_TIMEOUT);
+  NOTAS_CLOUD_PUSH_TIMEOUT = setTimeout(()=>{
+    const {ano,mes} = NOTA_PERIODO;
+    const rec = loadNotas(EDITING,ano,mes);
+    if(rec) enviarNotasParaNuvem(EDITING, { [keyNotas(EDITING,ano,mes)]: rec });
+  }, 800);
+}
+function flushNotasCloudPushAgora(){
+  if(!NOTAS_CLOUD_PUSH_TIMEOUT) return;
+  clearTimeout(NOTAS_CLOUD_PUSH_TIMEOUT); NOTAS_CLOUD_PUSH_TIMEOUT = null;
+  if(!EDITING || ROLE!=="colab" || !NOTA_PERIODO) return;
+  const {ano,mes} = NOTA_PERIODO;
+  const rec = loadNotas(EDITING,ano,mes);
+  if(rec) enviarNotasParaNuvem(EDITING, { [keyNotas(EDITING,ano,mes)]: rec });
+}
+/* hidrata as anotações desse colaborador a partir da nuvem, mesclando com o que
+   já existe no navegador (o lado com updatedAt mais recente vence, chave a chave);
+   o que só existe local (nunca subiu, ex.: de antes desse recurso existir) sobe agora. */
+function hidratarNotasNuvem(nome){
+  NOTAS_SYNC_READY = false;
+  return fetch("/api/notes?nome="+encodeURIComponent(nome)+"&t="+Date.now())
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      const cloud = (j && j.data && typeof j.data==="object") ? j.data : {};
+      const chaves = new Set([...chavesNotasLocaisDe(nome), ...Object.keys(cloud)]);
+      const aEnviar = {};
+      chaves.forEach(k => {
+        let local = null; try{ local = JSON.parse(localStorage.getItem(k)); }catch(e){}
+        let remoto = null; try{ remoto = typeof cloud[k]==="string" ? JSON.parse(cloud[k]) : (cloud[k]||null); }catch(e){}
+        const lt = (local && local.updatedAt) || 0, rt = (remoto && remoto.updatedAt) || 0;
+        if(remoto && rt >= lt) localStorage.setItem(k, JSON.stringify(remoto));
+        else if(local) aEnviar[k] = local;
+      });
+      if(Object.keys(aEnviar).length) enviarNotasParaNuvem(nome, aEnviar);
+    })
+    .catch(()=>{})   // offline: segue com o que já está no navegador; tenta de novo no próximo login
+    .finally(()=>{ NOTAS_SYNC_READY = true; });
+}
+
+/* =========================================================
    AVALIAÇÃO DE CICLO (matriz + PDI)
    Agora por ciclo (trimestral), não mais por mês: reaproveita o
    registro mensal (self/ment/pdi) já existente, ancorado sempre
@@ -1614,6 +1680,9 @@ function entrarColab(){
   document.getElementById("hub-voltar").hidden = true;
   renderHub();
   showScreen("hub");
+  // busca/mescla as anotações desse colaborador na nuvem (acompanham de qualquer máquina,
+  // mas continuam invisíveis ao mentor: endpoint próprio, ele nunca chama isso)
+  hidratarNotasNuvem(EDITING).then(()=>{ if(ROLE==="colab" && EDITING===match.nome) renderHub(); });
 }
 async function entrarGestor(){
   const senha = document.getElementById("in-gestor-senha").value;
@@ -2046,7 +2115,7 @@ function abrirNotasMes(ano,mes){
   document.getElementById("nt-month").textContent = MESES[mes-1] + " de " + ano;
   document.getElementById("nt-save-status").textContent = rec.updatedAt
     ? "Última gravação: " + new Date(rec.updatedAt).toLocaleString("pt-BR")
-    : "Suas anotações ficam salvas automaticamente neste navegador.";
+    : "Suas anotações ficam salvas automaticamente e te acompanham em qualquer computador.";
   showScreen("notas");
   NOTAS_DIRTY_SNAPSHOT = snapshotNotas();
 }
@@ -2068,6 +2137,7 @@ function salvarNotas(){
   saveNotas(EDITING,ano,mes,rec);
   document.getElementById("nt-save-status").textContent = "Última gravação: " + new Date(rec.updatedAt).toLocaleString("pt-BR");
   NOTAS_DIRTY_SNAPSHOT = snapshotNotas();
+  agendarPushNotasNuvem();
 }
 /* ---- "foto" das anotações, pra detectar alterações não salvas ---- */
 function snapshotNotas(){
@@ -2707,7 +2777,11 @@ async function exportarBackupHTML(){
 /* fechar a aba/atualizar a página com algo não salvo: aviso nativo do navegador
    (não dá pra customizar cor/texto desse, é uma proteção extra além do modal) */
 window.addEventListener("beforeunload", function(e){
+  flushNotasCloudPushAgora();   // manda pra nuvem o que ainda estava no debounce, antes de fechar
   if(isDirty()){ e.preventDefault(); e.returnValue = ""; }
+});
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState === "hidden") flushNotasCloudPushAgora();
 });
 
 /* =========================================================
