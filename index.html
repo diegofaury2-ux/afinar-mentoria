@@ -16,6 +16,8 @@
     --lime:#c4e01a;
     --lime-dim:#9db315;
     --carmim:#d0104a;
+    --amber:#f0c414;
+    --amber-dim:#c79f10;
     --white:#f4f4f2;
     --grey:#8a8a8a;
     --grey-soft:#b8b8b8;
@@ -529,6 +531,7 @@
   .cf-aval .cf-aval-title{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
   .cf-aval .cf-aval-status{font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.9}
   .cf-aval.cf-done{color:var(--lime);background:rgba(196,224,26,.08);border-color:var(--lime-dim)}
+  .cf-aval.cf-partial{color:var(--amber);background:rgba(240,196,20,.08);border-color:var(--amber-dim)}
 
   /* aviso de privacidade (aba de anotações do colaborador) */
   .privacy-box{border:1px solid var(--lime-dim);background:rgba(196,224,26,.06);border-radius:10px;padding:18px 22px;margin-top:20px;display:flex;gap:14px;align-items:flex-start}
@@ -1114,8 +1117,8 @@
     <div class="wrap">
       <div class="sec-eyebrow">Instrumento 01 · Diagnóstico</div>
       <h2>Matriz de competências <span id="i1-lock-tag" class="lock-tag" hidden>respostas do colaborador</span></h2>
-      <p class="body" id="i1-desc-colab">Cada competência recebe uma nota de 1 a 4 na coluna <strong>Autoavaliação</strong> (como você se vê). A coluna do mentor é preenchida por Val ou Luiz depois, e o gap entre as duas vira o ponto de partida da conversa.</p>
-      <p class="body" id="i1-desc-gestor" hidden>A coluna <strong>Autoavaliação</strong> traz as notas do próprio colaborador (travadas). Preencha a coluna <strong>Mentor</strong> com a sua leitura. O gap é calculado na hora.</p>
+      <p class="body" id="i1-desc-colab">Cada competência recebe uma nota de 1 a 4 na coluna <strong>Autoavaliação</strong> (como você se vê). A coluna do mentor é preenchida por Val ou Luiz depois — é uma avaliação cega: você só vê a nota do mentor quando os dois lados tiverem enviado o formulário completo, pra uma nota não influenciar a outra.</p>
+      <p class="body" id="i1-desc-gestor" hidden>Preencha a coluna <strong>Mentor</strong> com sua leitura, sem ver a autoavaliação ainda. É uma avaliação cega: as notas do colaborador na coluna <strong>Autoavaliação</strong> só aparecem depois que os dois lados enviarem o formulário completo, pra uma nota não influenciar a outra.</p>
 
       <div class="field-row">
         <div class="field"><label>Nome do colaborador</label><input type="text" id="m_nome" readonly></div>
@@ -1474,16 +1477,17 @@ function formsDe(nome){
 }
 function nomesComForms(){ return [...new Set(allKeys().map(k=>parseKey(k).nome))]; }
 
+/* status da resposta do COLABORADOR (autoavaliação): vazio | parcial | completo.
+   Usado no card "Avaliação de desempenho" do hub (verde só quando o colaborador
+   enviou tudo; amarelo quando começou mas ainda falta algo). */
 function statusRec(rec){
   if(!rec) return "vazio";
-  const temMent = rec.ment && Object.keys(rec.ment).length;
-  const r = rec.roteiro || {};
-  const temRot = r.checkin||r.revisao||r.goal||r.reality||r.options||r.way||r.registro;
-  if(temMent || temRot) return rec.mentCompleto ? "done" : "incompleto";
+  if(rec.selfCompleto) return "completo";
   const temSelf = rec.self && Object.keys(rec.self).length;
   const p = rec.pdi || {};
   const temPdi = p.forcas||p.gaps||p.aspiracao||p.p70||p.p20||p.p10||(p.compromissos&&p.compromissos.length);
-  if(temSelf || temPdi) return rec.selfCompleto ? "resp" : "incompleto";
+  const temMeta = (rec.funcao||"").trim()!=="" || (rec.data||"").trim()!=="";
+  if(temSelf || temPdi || temMeta) return "parcial";
   return "vazio";
 }
 
@@ -1931,9 +1935,9 @@ function renderHub(){
     // avaliação de desempenho do ciclo (matriz + PDI), agora trimestral e em destaque
     const avalRec = loadForm(EDITING, ANO_VISIVEL, mesRepresentanteDoCiclo(c));
     const avalSt = statusRec(avalRec);
-    const avalRespondido = avalSt !== "vazio";
-    const avalTxt = avalRespondido ? "Já respondido" : "Ainda não respondido";
-    const avalHtml = '<button type="button" class="cf-aval'+(avalRespondido?" cf-done":"")+'" onclick="abrirAvaliacaoCiclo('+ANO_VISIVEL+','+c+')">'
+    const avalClass = avalSt==="completo" ? " cf-done" : (avalSt==="parcial" ? " cf-partial" : "");
+    const avalTxt = avalSt==="completo" ? "Já respondido" : (avalSt==="parcial" ? "Respondido parcialmente" : "Ainda não respondido");
+    const avalHtml = '<button type="button" class="cf-aval'+avalClass+'" onclick="abrirAvaliacaoCiclo('+ANO_VISIVEL+','+c+')">'
           + '<span class="cf-aval-title">Avaliação de desempenho</span>'
           + '<span class="cf-aval-status">'+avalTxt+'</span>'
           + '</button>';
@@ -2093,10 +2097,16 @@ function preencherForm(rec){
   set("m_unit", rec.funcao || getCargo(rec.nome)); set("m_data", rec.data || isoHoje());
   set("m_mentor_view", mentorDoCiclo(rec.nome, cicloDe(PERIODO.mes)));
 
+  // avaliação cega: cada lado só vê as notas do outro depois que os DOIS
+  // completaram (rec.selfCompleto && rec.mentCompleto). Antes disso, cada um
+  // só vê a própria coluna, pra uma nota não influenciar a outra.
+  const ambosCompletos = !!(rec.selfCompleto && rec.mentCompleto);
   EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{
     const id = `e${ei}i${ii}`;
-    set(id+"_self", (rec.self && rec.self[id]) || "");
-    set(id+"_ment", (rec.ment && rec.ment[id]) || "");
+    const selfVal = (rec.self && rec.self[id]) || "";
+    const mentVal = (rec.ment && rec.ment[id]) || "";
+    set(id+"_self", (ROLE==="colab" || ambosCompletos) ? selfVal : "");
+    set(id+"_ment", (ROLE==="gestor" || ambosCompletos) ? mentVal : "");
   }));
   EIXOS.forEach((_,ei)=>calcGap(ei));
 
