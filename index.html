@@ -52,6 +52,11 @@
     border-bottom:1px solid var(--line);
     position:relative;overflow:hidden;
   }
+  #metodo .hero{min-height:0;display:block;padding:52px 0 36px}
+  #metodo .logo{margin-bottom:26px}
+  #metodo .eyebrow{margin-bottom:14px}
+  #metodo h1.hero-title{font-size:clamp(1.9rem,4.6vw,2.7rem);line-height:1.05;margin-bottom:14px}
+  #metodo .hero-lead{font-size:1rem;max-width:none}
   .logo{font-size:.82rem;letter-spacing:.32em;text-transform:uppercase;color:var(--grey);margin-bottom:auto;font-weight:600}
   .logo b{color:var(--white)}
   .logo .dot{color:var(--lime)}
@@ -168,10 +173,11 @@
   .field label{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);font-weight:600}
   .field input,.field select,.field textarea{background:var(--bg-card);border:1px solid var(--line);border-radius:8px;color:var(--white);padding:11px 13px;font-size:.95rem;font-family:inherit}
   .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--lime);border-color:var(--lime)}
-  /* mantém o picker nativo escuro (texto legível) e troca o ícone por verde neon */
-  .field input[type=date],.field input[type=time]{color-scheme:dark}
-  .field input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:1;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c4e01a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:contain}
-  .field input[type=time]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:1;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c4e01a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolyline points='12 7 12 12 15 14'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:contain}
+  /* mantém o picker nativo escuro (texto legível); ícone nativo fica invisível mas clicável, e o ícone verde neon é desenhado no próprio input, sem sobrepor a data */
+  .field input[type=date],.field input[type=time]{color-scheme:dark;padding-right:38px;background-repeat:no-repeat;background-position:right 12px center;background-size:16px 16px}
+  .field input[type=date]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c4e01a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E")}
+  .field input[type=time]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c4e01a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpolyline points='12 7 12 12 15 14'/%3E%3C/svg%3E")}
+  .field input[type=date]::-webkit-calendar-picker-indicator,.field input[type=time]::-webkit-calendar-picker-indicator{opacity:0;cursor:pointer}
   .field textarea{resize:vertical;min-height:70px;line-height:1.5}
   input:read-only,textarea:read-only{opacity:.72;cursor:default}
   select:disabled{opacity:.72;cursor:default}
@@ -232,7 +238,7 @@
   .icon-btn{padding:9px 13px;font-size:1.05rem;line-height:1}
 
   /* pdi dynamic rows */
-  .goal-row{display:grid;grid-template-columns:1fr 130px 36px;gap:10px;margin-bottom:10px;align-items:end}
+  .goal-row{display:grid;grid-template-columns:1fr 155px 36px;gap:10px;margin-bottom:10px;align-items:end}
   .goal-row .rm{background:transparent;border:1px solid var(--line);color:var(--carmim);border-radius:7px;cursor:pointer;height:44px;font-size:1.1rem;font-weight:700}
   .goal-row .rm:hover{border-color:var(--carmim)}
   .add-link{background:transparent;border:1px dashed var(--line);color:var(--lime);border-radius:8px;padding:10px 16px;cursor:pointer;font-family:inherit;font-weight:600;font-size:.86rem;margin-top:4px}
@@ -253,9 +259,9 @@
   .grow-step[open] summary{border-bottom:1px solid var(--line)}
   .grow-body{padding:18px 22px 22px 70px}
   .grow-body ul{list-style:none;margin:0 0 14px}
-  .grow-body li{color:var(--grey-soft);font-weight:300;padding:6px 0 6px 18px;position:relative;font-size:.94rem}
+  .grow-body li{color:var(--grey-soft);font-weight:300;padding:6px 0 6px 18px;position:relative;font-size:1.02rem}
   .grow-body li::before{content:"›";position:absolute;left:0;color:var(--lime);font-weight:700}
-  .grow-body textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--white);padding:10px 12px;font-family:inherit;font-size:.92rem;resize:vertical;min-height:60px}
+  .grow-body textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--white);padding:10px 12px;font-family:inherit;font-size:.98rem;resize:vertical;min-height:60px}
 
   /* ---------- LOGIN ---------- */
   #screen-login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;position:relative;overflow:hidden;background:radial-gradient(120% 90% at 80% 12%, rgba(196,224,26,.10), transparent 55%),radial-gradient(100% 80% at 10% 92%, rgba(208,16,74,.12), transparent 55%),var(--bg)}
@@ -539,10 +545,10 @@
   .rt-step-head .rt-letter{width:26px;height:26px;border-radius:6px;background:var(--bg-soft);border:1px solid var(--line);color:var(--lime);font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .rt-step-head .rt-letter svg{width:14px;height:14px}
   .rt-step-head .rt-st-title{font-weight:700;font-size:.98rem;color:var(--white)}
-  .rt-step-mode{font-size:.76rem;color:var(--grey);font-weight:300;margin-bottom:8px;font-style:italic}
+  .rt-step-mode{font-size:.84rem;color:var(--grey);font-weight:300;margin-bottom:8px;font-style:italic}
   .rt-step-mode strong{color:var(--grey-soft);font-style:normal;font-weight:600}
   .rt-q-list{list-style:none;display:grid;gap:6px}
-  .rt-q-list li{font-size:.9rem;color:var(--grey-soft);font-weight:300;padding-left:16px;position:relative}
+  .rt-q-list li{font-size:1rem;color:var(--grey-soft);font-weight:300;padding-left:16px;position:relative}
   .rt-q-list li::before{content:"—";position:absolute;left:0;color:var(--lime-dim)}
 
   .save-hint{font-size:.82rem;color:var(--grey);margin-top:14px;font-weight:300}
@@ -835,7 +841,7 @@
       <details class="grow-step">
         <summary><span class="letter">3</span><span>Realidade</span></summary>
         <div class="grow-body">
-          <ul><li>Fatos e exemplos concretos do que estou vivendo agora.</li></ul>
+          <ul><li>Fatos e exemplos concretos do que estou vivendo agora: o que tenho gostado de fazer, e onde sinto que estou sendo pouco aproveitado.</li></ul>
           <textarea id="nt_realidade" placeholder="Escreva aqui..." oninput="agendarSalvarNotas()"></textarea>
         </div>
       </details>
@@ -843,7 +849,7 @@
       <details class="grow-step">
         <summary><span class="letter">4</span><span>Caminhos e ideias</span></summary>
         <div class="grow-body">
-          <ul><li>Sugestões que surgiram na conversa, para não esquecer depois.</li></ul>
+          <ul><li>Sugestões, ideias e pessoas ou áreas de referência que surgiram na conversa, para não esquecer depois.</li></ul>
           <textarea id="nt_caminhos" placeholder="Escreva aqui..." oninput="agendarSalvarNotas()"></textarea>
         </div>
       </details>
@@ -917,7 +923,6 @@
       <ul class="rt-q-list">
         <li>Como você está desde a última conversa? O que mudou no seu dia a dia?</li>
         <li>Tem algo que valeu a pena comemorar ou reconhecer antes de seguir?</li>
-        <li>O que você quer trazer hoje? Pode ser algo sem relação nenhuma com as entregas do momento.</li>
       </ul>
     </div>
 
@@ -939,6 +944,7 @@
         <li>Que habilidade você quer desenvolver nos próximos meses?</li>
         <li>Existe algum projeto que ajudaria a consolidar um ponto forte ou fortalecer um ponto fraco?</li>
         <li>O que esse tema tem a ver com onde você quer estar daqui a um ano?</li>
+        <li>Por que essa habilidade/tema importa pra você agora?</li>
       </ul>
     </div>
 
@@ -949,6 +955,8 @@
         <li>O que você já tentou? O que funcionou e o que não?</li>
         <li>O que está sob seu controle nessa situação, e o que não está?</li>
         <li>Qual é o ponto crítico aqui: uma dificuldade, um gap ou uma expectativa que ainda não tinha virado palavra?</li>
+        <li>Quais projetos recentes você mais gostou de fazer, e por quê?</li>
+        <li>Sente que alguma habilidade sua está sendo pouco aproveitada hoje?</li>
       </ul>
     </div>
 
@@ -958,7 +966,7 @@
       <ul class="rt-q-list">
         <li>Quais caminhos existem? E se não houvesse nenhum obstáculo, o que você faria?</li>
         <li>Qual caminho parece mais viável agora, considerando tempo e energia disponíveis?</li>
-        <li>Tem alguém no time que já passou por algo parecido e pode ajudar?</li>
+        <li>Tem alguém na empresa de quem você gostaria de aprender mais, ou uma área que te interessa conhecer melhor?</li>
       </ul>
     </div>
 
@@ -1031,7 +1039,7 @@
   </div>
   <footer>
     <div class="wrap">
-      <div class="flogo"><img src="assets/imagens/hithammers_logo_wordmark.png" alt="hit.hammers" style="height:26px;width:auto;filter:invert(1)"></div>
+      <div class="flogo"><img src="assets/imagens/hithammers_logo_completo.png" alt="hit.hammers · Retrofuturist Strategy &amp; Insight Collective Agencies" style="height:44px;width:auto;filter:invert(1)"></div>
       <div class="ftag">Programa Afinar · Desenvolvimento Interno</div>
     </div>
   </footer>
@@ -1068,17 +1076,11 @@
   <div id="metodo">
     <header class="hero">
       <button type="button" class="jump-eval" id="btn-jump-eval" onclick="document.getElementById('inst1').scrollIntoView({behavior:'smooth'})">Ir direto para a avaliação ↓</button>
-      <div class="wrap" style="display:flex;flex-direction:column;flex:1">
+      <div class="wrap">
         <div class="logo"><img src="assets/imagens/hithammers_logo_wordmark.png" alt="hit.hammers" style="height:16px;width:auto;filter:invert(1);vertical-align:middle"> &nbsp;·&nbsp; programa interno de desenvolvimento</div>
-        <div style="margin-top:auto">
-          <span class="eyebrow">Avaliação de desempenho · Programa Afinar</span>
-          <h1 class="hero-title">Formulário de <span class="lime">Desempenho</span></h1>
-          <p class="hero-lead">A matriz de competências e o plano de desenvolvimento (PDI) do seu ciclo atual.</p>
-          <div class="hero-meta">
-            <div><div class="num">Trimestral</div><div class="lbl">Cadência</div></div>
-            <div><div class="num">1 a 4</div><div class="lbl">Escala</div></div>
-          </div>
-        </div>
+        <span class="eyebrow">Avaliação de desempenho · Programa Afinar</span>
+        <h1 class="hero-title">Formulário de <span class="lime">Desempenho</span></h1>
+        <p class="hero-lead">A matriz de competências e o plano de desenvolvimento (PDI) do seu ciclo atual.</p>
       </div>
     </header>
 
@@ -1103,7 +1105,7 @@
           <div class="scale-cell"><div class="lv">4</div><div class="nm">Ensina / eleva</div><div class="ds">Desenvolve outros e propõe melhorias.</div></div>
         </div>
       </div>
-      <div class="lead-note">Meta realista para o ciclo: mover a maioria dos itens em um nível (por exemplo, de 2 para 3). Chegar a 4 é exceção, não expectativa.</div>
+      <div class="lead-note" style="max-width:none">Meta realista para o ciclo: mover a maioria dos itens em um nível (por exemplo, de 2 para 3). Chegar a 4 é exceção, não expectativa.</div>
     </div></section>
   </div><!-- /metodo -->
 
@@ -1118,16 +1120,7 @@
       <div class="field-row">
         <div class="field"><label>Nome do colaborador</label><input type="text" id="m_nome" readonly></div>
         <div class="field"><label>Função / área</label>
-          <select id="m_unit" onchange="atualizarAlertaForm()">
-            <option value="">Selecione</option>
-            <option>Conteúdo</option>
-            <option>Audiovisual</option>
-            <option>Design</option>
-            <option>Canais digitais</option>
-            <option>Eventos</option>
-            <option>Apoio operacional</option>
-            <option>Comunicação (head)</option>
-          </select>
+          <input type="text" id="m_unit" readonly placeholder="Definida automaticamente pelo cadastro">
         </div>
       </div>
       <div class="field-row">
@@ -1155,11 +1148,6 @@
       <h2>Ficha de PDI <span id="i2-lock-tag" class="lock-tag" hidden>respostas do colaborador</span></h2>
       <p class="body">Uma página por pessoa, revisada a cada trimestre. Define o ponto de partida, o destino em 12 meses e o plano do trimestre distribuído em 70·20·10.</p>
 
-      <div class="field-row">
-        <div class="field"><label>Colaborador</label><input type="text" id="p_nome" readonly></div>
-        <div class="field"><label>Ciclo / trimestre</label><input type="text" id="p_ciclo" readonly></div>
-      </div>
-
       <div class="field" style="margin:20px 0">
         <label>Onde estou · 3 forças</label>
         <textarea id="p_forcas" placeholder="As três competências mais fortes hoje, conforme a matriz" oninput="atualizarAlertaForm()"></textarea>
@@ -1168,15 +1156,14 @@
         <label>Onde estou · 3 gaps prioritários</label>
         <textarea id="p_gaps" placeholder="Os três gaps a trabalhar neste ciclo" oninput="atualizarAlertaForm()"></textarea>
       </div>
-
-      <h3>Onde eu me reconheço agora</h3>
-      <p class="body" style="margin-top:-6px">Marque 2 ou 3 frases que mais parecem com você hoje. Não é teste, é ponto de partida, pode mudar de um ciclo pro outro.</p>
-      <div class="anchor-grid" id="anchor-root"></div>
-
       <div class="field" style="margin:20px 0">
         <label>Onde quero chegar · aspiração em 12 meses</label>
         <textarea id="p_aspiracao" placeholder="Direção de carreira e 2 ou 3 competências-alvo" oninput="atualizarAlertaForm()"></textarea>
       </div>
+
+      <h3>Onde eu me reconheço agora</h3>
+      <p class="body" style="margin-top:-6px">Marque 2 ou 3 frases que mais parecem com você hoje. Não é teste, é ponto de partida, pode mudar de um ciclo pro outro.</p>
+      <div class="anchor-grid" id="anchor-root"></div>
 
       <h3>Como eu aprendo melhor</h3>
       <p class="body" style="margin-top:-6px">Marque a(s) que mais parecem com você. Ajuda a decidir o formato certo do plano abaixo, não o conteúdo, o jeito de aprender.</p>
@@ -1195,6 +1182,7 @@
         <div class="pb-head pb-10">10% · Formal</div>
         <div class="field"><textarea id="p_10" placeholder="Curso, leitura ou material estruturado" oninput="atualizarAlertaForm()"></textarea></div>
       </div>
+      <p class="save-hint">O 70·20·10 é uma referência consagrada do Center for Creative Leadership, não uma lei exata: use como proporção orientadora do plano, não como meta rígida a bater nos três blocos.</p>
 
       <h3>Compromissos do mês · máximo 2</h3>
       <div id="goals-root"></div>
@@ -1211,7 +1199,7 @@
 
   <footer>
     <div class="wrap">
-      <div class="flogo"><img src="assets/imagens/hithammers_logo_wordmark.png" alt="hit.hammers" style="height:26px;width:auto;filter:invert(1)"></div>
+      <div class="flogo"><img src="assets/imagens/hithammers_logo_completo.png" alt="hit.hammers · Retrofuturist Strategy &amp; Insight Collective Agencies" style="height:44px;width:auto;filter:invert(1)"></div>
       <div class="ftag">Programa Afinar · Desenvolvimento Interno</div>
     </div>
   </footer>
@@ -2079,11 +2067,9 @@ function aplicarPapelUI(){
 
   document.querySelectorAll(".sc-self").forEach(s=> s.disabled = !colab);
   document.querySelectorAll(".sc-ment").forEach(s=> s.disabled = colab);
-  document.getElementById("m_unit").disabled = !colab;
   document.getElementById("m_data").readOnly = !colab;
 
   document.querySelectorAll("#inst2 input, #inst2 textarea").forEach(el=>{
-    if(el.id === "p_nome" || el.id === "p_ciclo"){ el.readOnly = true; return; }
     if(el.type === "checkbox"){ el.disabled = !colab; return; }
     el.readOnly = !colab;
   });
@@ -2103,10 +2089,9 @@ function set(id,v){ const e=document.getElementById(id); if(e) e.value = v||""; 
 function esc(s){ return (s||"").toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 function preencherForm(rec){
-  set("m_nome", rec.nome); set("p_nome", rec.nome);
-  set("m_unit", rec.funcao); set("m_data", rec.data || isoHoje());
+  set("m_nome", rec.nome);
+  set("m_unit", rec.funcao || getCargo(rec.nome)); set("m_data", rec.data || isoHoje());
   set("m_mentor_view", mentorDoCiclo(rec.nome, cicloDe(PERIODO.mes)));
-  set("p_ciclo", "Ciclo " + cicloDe(PERIODO.mes) + " · " + MESES[PERIODO.mes-1] + " de " + PERIODO.ano);
 
   EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{
     const id = `e${ei}i${ii}`;
