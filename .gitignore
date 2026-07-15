@@ -7,3 +7,6 @@ Thumbs.db
 .DS_Store
 
 .vercel
+
+# copia local de demonstracao (com dados de exemplo) - NUNCA deve ir para producao
+afinar-local-exemplos.html
