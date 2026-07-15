@@ -5,3 +5,5 @@ node_modules/
 *.bak
 Thumbs.db
 .DS_Store
+
+.vercel
