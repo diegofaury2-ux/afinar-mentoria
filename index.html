@@ -1580,6 +1580,9 @@ let ANO_VISIVEL = ANO_PADRAO;
 let FILTRO = "todos";
 let MODAL_CTX = null;
 let CONFIRM_ACTION = null;
+let FORM_DIRTY_SNAPSHOT = null;   // "foto" dos campos do formulário no momento em que foi aberto/salvo
+let NOTAS_DIRTY_SNAPSHOT = null;  // idem para as anotações privadas
+let PENDING_LEAVE_ACTION = null;  // ação de navegação a executar depois que o usuário decidir (sair/salvar)
 const HOJE = new Date();
 const CUR = { ano: HOJE.getFullYear(), mes: HOJE.getMonth()+1 };
 
@@ -1643,10 +1646,12 @@ async function entrarGestor(){
   showScreen("gestor");
 }
 function logout(){
-  ROLE = EDITING = PERIODO = null;
-  document.getElementById("in-colab-nome").value = "";
-  document.getElementById("in-gestor-senha").value = "";
-  showScreen("login");
+  guardedLeave(()=>{
+    ROLE = EDITING = PERIODO = null;
+    document.getElementById("in-colab-nome").value = "";
+    document.getElementById("in-gestor-senha").value = "";
+    showScreen("login");
+  });
 }
 
 /* =========================================================
@@ -2014,8 +2019,9 @@ function abrirFormPeriodo(ano,mes){
   showScreen("app");
   atualizarAlertaForm();
   setupJumpEval();
+  FORM_DIRTY_SNAPSHOT = snapshotForm();
 }
-function voltarHub(){ renderHub(); showScreen("hub"); }
+function voltarHub(){ guardedLeave(()=>{ renderHub(); showScreen("hub"); }); }
 
 /* ---- abrir avaliação de ciclo (matriz + PDI), ancorada no 1º mês do ciclo ---- */
 function abrirAvaliacaoCiclo(ano,ciclo){
@@ -2042,6 +2048,7 @@ function abrirNotasMes(ano,mes){
     ? "Última gravação: " + new Date(rec.updatedAt).toLocaleString("pt-BR")
     : "Suas anotações ficam salvas automaticamente neste navegador.";
   showScreen("notas");
+  NOTAS_DIRTY_SNAPSHOT = snapshotNotas();
 }
 let NOTAS_SALVAR_TIMEOUT = null;
 function agendarSalvarNotas(){
@@ -2060,7 +2067,19 @@ function salvarNotas(){
   rec.livre = val("nt_livre");
   saveNotas(EDITING,ano,mes,rec);
   document.getElementById("nt-save-status").textContent = "Última gravação: " + new Date(rec.updatedAt).toLocaleString("pt-BR");
+  NOTAS_DIRTY_SNAPSHOT = snapshotNotas();
 }
+/* ---- "foto" das anotações, pra detectar alterações não salvas ---- */
+function snapshotNotas(){
+  return JSON.stringify({
+    abertura: val("nt_abertura"), retomada: val("nt_retomada"),
+    realidade: val("nt_realidade"), caminhos: val("nt_caminhos"),
+    c1acao: val("nt_c1acao"), c1prazo: val("nt_c1prazo"),
+    c2acao: val("nt_c2acao"), c2prazo: val("nt_c2prazo"),
+    livre: val("nt_livre")
+  });
+}
+function notasDirty(){ return !!NOTAS_DIRTY_SNAPSHOT && snapshotNotas() !== NOTAS_DIRTY_SNAPSHOT; }
 
 /* =========================================================
    TRAVAS POR PAPEL
@@ -2201,7 +2220,28 @@ function salvar(){
       : "<b>Salvo</b> em " + new Date(rec.updatedAt).toLocaleString("pt-BR") + ". Faltam itens da Seção 01 para o colaborador receber um feedback completo.";
     toast(rec.mentCompleto ? "Avaliação salva" : "Salvo, mas a Seção 01 ainda está incompleta");
   }
+  FORM_DIRTY_SNAPSHOT = snapshotForm();
 }
+
+/* ---- "foto" dos campos do formulário, pra detectar alterações não salvas ---- */
+function snapshotForm(){
+  if(ROLE === "colab"){
+    const self = {};
+    EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{ const id=`e${ei}i${ii}`; self[id]=val(id+"_self"); }));
+    const ancorasSel = ANCORAS.map((_,i)=>i).filter(i=>{ const el=document.getElementById("anc_"+i); return el && el.checked; });
+    const kolbSel = KOLB.map((_,i)=>i).filter(i=>{ const el=document.getElementById("kolb_"+i); return el && el.checked; });
+    return JSON.stringify({
+      data: val("m_data"), self,
+      forcas:val("p_forcas"), gaps:val("p_gaps"), aspiracao:val("p_aspiracao"),
+      p70:val("p_70"), p20:val("p_20"), p10:val("p_10"), compromissos: coletarCompromissos(),
+      ancoras: ancorasSel, kolb: kolbSel
+    });
+  }
+  const ment = {};
+  EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{ const id=`e${ei}i${ii}`; ment[id]=val(id+"_ment"); }));
+  return JSON.stringify({ ment });
+}
+function formDirty(){ return !!FORM_DIRTY_SNAPSHOT && snapshotForm() !== FORM_DIRTY_SNAPSHOT; }
 
 /* =========================================================
    VALIDAÇÃO DE PREENCHIMENTO
@@ -2263,7 +2303,7 @@ function openModal(html){
 function closeModal(){
   document.getElementById("modal-overlay").hidden = true;
   document.getElementById("modal-box").innerHTML = "";
-  MODAL_CTX = null; CONFIRM_ACTION = null;
+  MODAL_CTX = null; CONFIRM_ACTION = null; PENDING_LEAVE_ACTION = null;
 }
 function confirmModal(titulo, msg, onOk, okLabel){
   CONFIRM_ACTION = onOk;
@@ -2274,6 +2314,43 @@ function confirmModal(titulo, msg, onOk, okLabel){
   openModal(html);
 }
 function runConfirm(){ const fn = CONFIRM_ACTION; closeModal(); if(fn) fn(); }
+
+/* =========================================================
+   GUARDA DE ALTERAÇÕES NÃO SALVAS
+   Antes de sair do formulário de avaliação ou das anotações
+   privadas, se houver algo digitado e não salvo, mostra um aviso
+   no meio da tela: "Sair sem salvar" (vermelho) ou "Salvar
+   alterações" (verde) antes de completar a navegação.
+========================================================== */
+function isDirty(){
+  if(!document.getElementById("screen-app").hidden) return formDirty();
+  if(!document.getElementById("screen-notas").hidden) return notasDirty();
+  return false;
+}
+function guardedLeave(acaoDepois){
+  if(!isDirty()){ acaoDepois(); return; }
+  PENDING_LEAVE_ACTION = acaoDepois;
+  const html = '<div class="modal-head">Alterações não salvas</div>'
+    + '<div class="modal-sub">Você preencheu informações e ainda não salvou. O que deseja fazer?</div>'
+    + '<div class="modal-actions">'
+    +   '<button class="btn btn-danger" onclick="leaveWithoutSaving()">Sair sem salvar</button>'
+    +   '<button class="btn btn-primary" onclick="saveAndLeave()">Salvar alterações</button>'
+    + '</div>';
+  openModal(html);
+}
+function leaveWithoutSaving(){
+  clearTimeout(NOTAS_SALVAR_TIMEOUT);   // cancela o autosave pendente das anotações: a escolha foi descartar
+  const fn = PENDING_LEAVE_ACTION;
+  closeModal(); PENDING_LEAVE_ACTION = null;
+  if(fn) fn();
+}
+function saveAndLeave(){
+  if(!document.getElementById("screen-app").hidden) salvar();
+  else if(!document.getElementById("screen-notas").hidden){ clearTimeout(NOTAS_SALVAR_TIMEOUT); salvarNotas(); }
+  const fn = PENDING_LEAVE_ACTION;
+  closeModal(); PENDING_LEAVE_ACTION = null;
+  if(fn) fn();
+}
 
 /* =========================================================
    MODAL DE REUNIÃO
@@ -2626,6 +2703,12 @@ async function exportarBackupHTML(){
     toast("Não foi possível gerar o backup: " + (err && err.message ? err.message : err));
   }
 }
+
+/* fechar a aba/atualizar a página com algo não salvo: aviso nativo do navegador
+   (não dá pra customizar cor/texto desse, é uma proteção extra além do modal) */
+window.addEventListener("beforeunload", function(e){
+  if(isDirty()){ e.preventDefault(); e.returnValue = ""; }
+});
 
 /* =========================================================
    UTIL
