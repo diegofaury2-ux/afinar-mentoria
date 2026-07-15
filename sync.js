@@ -81,7 +81,8 @@
     fetch(API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ set: set, del: del })
+      body: JSON.stringify({ set: set, del: del }),
+      keepalive: true   // garante que o navegador tenta entregar o POST mesmo se a aba for fechada/navegada no meio do envio
     })
       .then(r => (r.ok ? r.json() : null))
       .then(j => { if (j && typeof j.v === 'number') _ver = j.v; })
