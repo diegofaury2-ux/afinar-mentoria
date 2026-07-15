@@ -6,7 +6,7 @@
 <title>Programa Afinar · App de Mentoria · hit.hammers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Pirata+One&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0a0a0a;
@@ -177,6 +177,26 @@
   select:disabled{opacity:.72;cursor:default}
   .lock-tag{display:inline-block;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--grey);border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin-left:10px;vertical-align:middle}
 
+  /* ---------- COMO PREENCHER (novo formulário) ---------- */
+  .steps{margin-top:22px;counter-reset:passo;display:grid;gap:14px}
+  .step{display:grid;grid-template-columns:34px 1fr;gap:16px;align-items:start}
+  .step .snum{counter-increment:passo;width:34px;height:34px;border-radius:8px;background:var(--bg-card);border:1px solid var(--line);color:var(--lime);font-weight:800;font-size:.95rem;display:flex;align-items:center;justify-content:center}
+  .step .snum::before{content:counter(passo)}
+  .step p{color:var(--grey-soft);font-weight:300;font-size:.95rem;padding-top:5px}
+  .step p strong{color:var(--white);font-weight:600}
+  .scale-note{margin:26px 0 8px}
+  .scale-note .sn-title{font-size:.82rem;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px}
+
+  /* âncoras de carreira / estilos de aprendizagem */
+  .anchor-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+  .anchor-chip{display:flex;align-items:flex-start;gap:10px;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .15s ease}
+  .anchor-chip:hover{border-color:var(--lime-dim)}
+  .anchor-chip input{margin-top:3px;accent-color:var(--lime)}
+  .anchor-chip .at{font-weight:700;font-size:.92rem;display:block}
+  .anchor-chip .ad{font-size:.8rem;color:var(--grey);font-weight:300;margin-top:2px}
+  .anchor-chip:has(input:checked){border-color:var(--lime);background:rgba(196,224,26,.06)}
+  @media(max-width:820px){.anchor-grid{grid-template-columns:1fr}}
+
   /* matriz */
   .matrix-block{margin-top:30px}
   .matrix-axis-title{font-size:1.1rem;font-weight:800;color:var(--white);margin:26px 0 4px;display:flex;align-items:center;gap:10px}
@@ -282,18 +302,29 @@
 
   /* ---------- PAINEL DO GESTOR ---------- */
   #screen-gestor,#screen-hub,#screen-settings{padding:0 0 80px}
-  .gest-head{padding:40px 0 26px;border-bottom:1px solid var(--line);background:radial-gradient(120% 90% at 82% 20%, rgba(196,224,26,.07), transparent 55%),var(--bg)}
+  .gest-head{padding:40px 0 26px;border-bottom:1px solid var(--line);background:radial-gradient(120% 90% at 82% 20%, rgba(196,224,26,.07), transparent 55%),var(--bg);position:relative}
   .gest-head h2{margin-bottom:6px}
   .gest-head p{color:var(--grey-soft);font-weight:300}
+  .gest-head .wrap-wide{position:relative}
   .filter-row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:22px}
   .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .filter-bar .fl-lbl{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grey);font-weight:600;margin-right:4px}
   .chip{background:var(--bg-card);border:1px solid var(--line);border-radius:20px;padding:8px 18px;cursor:pointer;font-family:inherit;font-weight:600;font-size:.86rem;color:var(--grey-soft);transition:.15s}
   .chip:hover{border-color:var(--lime-dim)}
   .chip.active{border-color:var(--lime);color:var(--lime);background:rgba(196,224,26,.06)}
-  .cal-nav-btn{display:inline-flex;align-items:center;gap:9px;background:var(--bg-card);border:1px solid var(--lime-dim);color:var(--lime);border-radius:20px;padding:8px 18px 8px 14px;font-family:inherit;font-weight:700;font-size:.86rem;cursor:pointer}
-  .cal-nav-btn svg{width:16px;height:16px}
-  .cal-nav-btn:hover{border-color:var(--lime);background:rgba(196,224,26,.1)}
+  .action-cards{position:absolute;top:0;right:28px;display:flex;gap:14px}
+  .action-card{position:relative;height:166px;border-radius:14px;overflow:hidden;border:1px solid var(--line);cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding:0;background:#0a0a0a;font-family:inherit}
+  .action-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;transition:opacity .2s}
+  .action-card:hover img{opacity:.52}
+  .action-card .action-scrim{position:absolute;inset:0;background:linear-gradient(165deg, rgba(8,8,8,.2), rgba(8,8,8,.68))}
+  .action-card .action-title{position:relative;z-index:1;width:100%;box-sizing:border-box;padding:0 6px 8px;font-family:var(--font-head);font-weight:800;font-size:1.22rem;letter-spacing:-.015em;text-transform:none;text-align:center;opacity:.88;text-shadow:0 2px 14px rgba(0,0,0,.9),0 0 3px rgba(0,0,0,.95)}
+  .action-card.cal-card{width:122px}
+  .action-card.cal-card .action-title{color:var(--white)}
+  .action-card.roteiro-card{width:122px}
+  .action-card.roteiro-card img{opacity:.45}
+  .action-card.roteiro-card:hover img{opacity:.57}
+  .action-card.roteiro-card .action-title{color:var(--white)}
+  @media (max-width:900px){.action-cards{display:none}}
 
   /* barras de mentor */
   .mentor-bars-box{background:var(--bg-soft);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-top:32px}
@@ -415,8 +446,6 @@
   .cycle-col .ch .ch-band .ch-band-filter{position:absolute;inset:0;background:linear-gradient(160deg,rgba(208,16,74,.80) 0%,rgba(120,8,42,.66) 100%)}
   .cycle-col .ch .ch-band.ch-fallback img,.cycle-col .ch .ch-band.ch-fallback .ch-band-filter{display:none}
   .cycle-col .cb{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1}
-  .cycle-col .cf{margin:2px 12px 12px;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;text-align:center;padding:8px 10px;border-radius:8px;color:var(--grey);background:var(--bg-card);border:1px solid var(--line)}
-  .cycle-col .cf.done{color:var(--lime);border-color:rgba(196,224,26,.35);background:rgba(196,224,26,.06)}
 
   /* ---------- CARD DO MENTOR (topo direito, alinhado ao Ciclo 4) ---------- */
   #screen-hub .gest-head .wrap-hub{position:relative}
@@ -458,10 +487,10 @@
   .mc-s{font-family:var(--font-mono);font-size:.66rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--grey)}
   .mc-s i{width:7px;height:7px;border-radius:50%;background:var(--grey);display:inline-block;flex-shrink:0}
   .mc-num{align-self:center;font-size:2rem;font-weight:800;line-height:1;color:var(--grey);font-family:var(--font-head)}
-  .mc-dt{align-self:center;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:1px;min-width:56px;font-family:var(--font-mono);font-size:.6rem;line-height:1.2;text-align:right;background:none;border:none;padding:0 0 0 4px;color:var(--grey)}
+  .mc-dt{align-self:center;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:2px;min-width:62px;font-family:var(--font-mono);font-size:.6rem;line-height:1.2;text-align:right;background:none;border:none;padding:0 0 0 4px;color:var(--grey)}
   button.mc-dt{cursor:pointer}
-  .mc-dt .mc-dt-d{font-weight:700;color:var(--grey-soft)}
-  .mc-dt .mc-dt-h{color:var(--grey)}
+  .mc-dt .mc-dt-d{font-weight:800;font-size:.86rem;color:var(--white)}
+  .mc-dt .mc-dt-h{font-size:.68rem;font-weight:700;color:var(--grey-soft)}
   .mc-dt.rc-done .mc-dt-d{color:var(--lime)}
   .mc-dt.rc-skip .mc-dt-d{color:var(--carmim)}
   .mc-dt.rc-agendada .mc-dt-d{color:var(--grey-soft)}
@@ -477,6 +506,29 @@
   .month-cell.mc-current{border-color:rgba(196,224,26,.45);background:linear-gradient(160deg,rgba(196,224,26,.10),rgba(196,224,26,.03))}
   .month-cell.mc-current::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--lime)}
   .month-cell.mc-current .mc-num{color:var(--lime)}
+
+  /* meses travados (painel do mentor): sem clique, já que o mentor não vê as anotações */
+  .month-cell.mc-locked .mc-main{cursor:default}
+  .month-cell.mc-locked:hover{transform:none;border-color:var(--line)}
+  .month-cell.mc-locked .mc-s{color:var(--grey)}
+
+  /* card de avaliação de ciclo, mesmo tamanho/proporção dos cards de mês (substitui o antigo "X de 3 avaliados") */
+  .cf-aval{
+    position:relative;border:1px solid var(--carmim);border-radius:10px;background:rgba(208,16,74,.08);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    min-height:66px;padding:10px 12px;cursor:pointer;transition:.15s;font-family:var(--font-mono);
+    color:var(--carmim);width:100%;
+  }
+  .cf-aval:hover{background:rgba(208,16,74,.16);transform:translateY(-2px)}
+  .cf-aval .cf-aval-title{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+  .cf-aval .cf-aval-status{font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.9}
+  .cf-aval.cf-done{color:var(--lime);background:rgba(196,224,26,.08);border-color:var(--lime-dim)}
+
+  /* aviso de privacidade (aba de anotações do colaborador) */
+  .privacy-box{border:1px solid var(--lime-dim);background:rgba(196,224,26,.06);border-radius:10px;padding:18px 22px;margin-top:20px;display:flex;gap:14px;align-items:flex-start}
+  .privacy-box svg{width:20px;height:20px;color:var(--lime);flex-shrink:0;margin-top:2px}
+  .privacy-box p{color:var(--white);font-weight:300;font-size:.92rem;line-height:1.5}
+  .privacy-box strong{color:var(--lime)}
 
   .save-hint{font-size:.82rem;color:var(--grey);margin-top:14px;font-weight:300}
   .save-hint b{color:var(--lime);font-weight:600}
@@ -576,7 +628,8 @@
         <datalist id="lista-colabs"></datalist>
       </div>
       <div class="login-error" id="err-colab"></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="entrarColab()">Visualizar formulário</button>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="entrarColab()">Acessar meu perfil</button>
+      <a class="btn btn-danger" style="width:100%;margin-top:10px;display:block;text-align:center;text-decoration:none;box-sizing:border-box" href="aviso-afinar.html" target="_blank" rel="noopener">Objetivos do programa</a>
     </div>
 
     <div class="login-panel" id="panel-gestor" hidden>
@@ -620,7 +673,18 @@
           <button class="chip" data-f="Val" onclick="setFiltro('Val')">Mentorados de Val</button>
           <button class="chip" data-f="Luiz" onclick="setFiltro('Luiz')">Mentorados de Luiz</button>
         </div>
-        <button class="cal-nav-btn" onclick="abrirCalendario()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Calendário de reuniões</button>
+      </div>
+      <div class="action-cards">
+        <button class="action-card cal-card" onclick="abrirCalendario()">
+          <img src="assets/imagens/calendario.jpg" alt="" style="object-position:center 38%">
+          <span class="action-scrim"></span>
+          <span class="action-title">Calendário</span>
+        </button>
+        <button class="action-card roteiro-card" onclick="toast('Em breve: o guia completo do roteiro de mentoria')">
+          <img src="assets/imagens/roteiro-mentoria.jpg" alt="" style="object-position:center 60%">
+          <span class="action-scrim"></span>
+          <span class="action-title">Roteiro</span>
+        </button>
       </div>
     </div>
   </div>
@@ -688,7 +752,7 @@
     <div class="wrap wrap-hub">
       <div class="sec-eyebrow" id="hub-eyebrow">Linha do tempo</div>
       <h2 id="hub-title"></h2>
-      <p>Selecione o ano e clique no mês para abrir o formulário daquele ciclo.</p>
+      <p id="hub-desc">Selecione o ano. Os meses são as suas anotações pessoais; a avaliação de desempenho acontece uma vez por ciclo.</p>
       <div class="year-nav">
         <button onclick="mudarAno(-1)" title="Ano anterior">&lsaquo;</button>
         <span id="year-label">2026</span>
@@ -699,6 +763,105 @@
   </div>
   <div class="wrap wrap-hub">
     <div class="cycles-grid" id="cycles-root"></div>
+  </div>
+</div>
+
+<!-- =========================================================
+     TELA 3B · ANOTAÇÕES MENSAIS (colaborador, privado, não visível ao mentor)
+========================================================== -->
+<div id="screen-notas" hidden>
+  <div class="appbar">
+    <div class="wrap">
+      <div class="who" id="notas-who">Minhas anotações<span class="pill">Privado</span></div>
+      <div class="appbar-actions">
+        <button class="btn btn-ghost" onclick="voltarHub()">&larr; Meses</button>
+        <button class="btn btn-primary" onclick="salvarNotas()">Salvar</button>
+        <button class="btn btn-ghost" onclick="logout()">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="period-bar">
+    <div class="wrap">
+      <span class="pb-cycle" id="nt-cycle">Ciclo 3</span>
+      <span class="pb-month" id="nt-month">Julho de 2026</span>
+    </div>
+  </div>
+
+  <div class="wrap" style="padding-top:22px">
+    <div class="privacy-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      <p>Estas anotações são <strong>pessoais</strong> e não são acessadas pelos mentores. O objetivo é só te ajudar a organizar as próprias ideias e chegar mais preparado para a conversa mensal.</p>
+    </div>
+  </div>
+
+  <section class="tool">
+    <div class="wrap">
+      <div class="sec-eyebrow">Antes e depois da conversa</div>
+      <h2>Minhas anotações do mês</h2>
+      <p class="body">Preencha à vontade, antes, durante ou depois da sessão. Não precisa responder tudo.</p>
+
+      <details class="grow-step" open>
+        <summary><span class="letter">1</span><span>Abertura</span></summary>
+        <div class="grow-body">
+          <ul><li>O que eu quero trazer para a conversa, mesmo sem relação com o trabalho do dia a dia.</li></ul>
+          <textarea id="nt_abertura" placeholder="Escreva aqui..." oninput="agendarSalvarNotas()"></textarea>
+        </div>
+      </details>
+
+      <details class="grow-step">
+        <summary><span class="letter">2</span><span>Retomada</span></summary>
+        <div class="grow-body">
+          <ul><li>O que mudou desde a última vez, o que ainda não resolvi.</li></ul>
+          <textarea id="nt_retomada" placeholder="Escreva aqui..." oninput="agendarSalvarNotas()"></textarea>
+        </div>
+      </details>
+
+      <details class="grow-step">
+        <summary><span class="letter">3</span><span>Realidade</span></summary>
+        <div class="grow-body">
+          <ul><li>Fatos e exemplos concretos do que estou vivendo agora.</li></ul>
+          <textarea id="nt_realidade" placeholder="Escreva aqui..." oninput="agendarSalvarNotas()"></textarea>
+        </div>
+      </details>
+
+      <details class="grow-step">
+        <summary><span class="letter">4</span><span>Caminhos e ideias</span></summary>
+        <div class="grow-body">
+          <ul><li>Sugestões que surgiram na conversa, para não esquecer depois.</li></ul>
+          <textarea id="nt_caminhos" placeholder="Escreva aqui..." oninput="agendarSalvarNotas()"></textarea>
+        </div>
+      </details>
+
+      <details class="grow-step">
+        <summary><span class="letter">5</span><span>Compromisso <small class="st">no máximo 2 ações</small></span></summary>
+        <div class="grow-body">
+          <div class="field-row">
+            <div class="field"><label>Ação 1</label><input type="text" id="nt_c1acao" placeholder="O que vou fazer" oninput="agendarSalvarNotas()"></div>
+            <div class="field"><label>Prazo</label><input type="date" id="nt_c1prazo" onchange="agendarSalvarNotas()"></div>
+          </div>
+          <div class="field-row" style="margin-top:14px">
+            <div class="field"><label>Ação 2</label><input type="text" id="nt_c2acao" placeholder="O que vou fazer" oninput="agendarSalvarNotas()"></div>
+            <div class="field"><label>Prazo</label><input type="date" id="nt_c2prazo" onchange="agendarSalvarNotas()"></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="grow-step">
+        <summary><span class="letter">✓</span><span>Registro livre</span></summary>
+        <div class="grow-body">
+          <ul><li>Qualquer outra anotação, sem título nem estrutura.</li></ul>
+          <textarea id="nt_livre" style="min-height:120px" placeholder="Escreva à vontade..." oninput="agendarSalvarNotas()"></textarea>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <div class="savebar">
+    <div class="wrap">
+      <div class="status" id="nt-save-status">Suas anotações ficam salvas automaticamente neste navegador.</div>
+      <button class="btn btn-primary" onclick="salvarNotas()">Salvar anotações</button>
+    </div>
   </div>
 </div>
 
@@ -791,133 +954,40 @@
       <div class="wrap" style="display:flex;flex-direction:column;flex:1">
         <div class="logo"><img src="assets/imagens/hithammers_logo_wordmark.png" alt="hit.hammers" style="height:16px;width:auto;filter:invert(1);vertical-align:middle"> &nbsp;·&nbsp; programa interno de desenvolvimento</div>
         <div style="margin-top:auto">
-          <span class="eyebrow">Mentoria de carreira · Time de Marketing & Comunicação</span>
-          <h1 class="hero-title">Programa <span class="lime">Afinar</span></h1>
-          <p class="hero-lead">O martelo não existe só para quebrar. Existe para <em>testar onde soa oco e reforçar onde já vibra</em>. Este é o método que aplicamos nas marcas, agora voltado para dentro, para desenvolver quem constrói a hit.hammers.</p>
+          <span class="eyebrow">Avaliação de desempenho · Programa Afinar</span>
+          <h1 class="hero-title">Formulário de <span class="lime">Desempenho</span></h1>
+          <p class="hero-lead">A matriz de competências e o plano de desenvolvimento (PDI) do seu ciclo atual.</p>
           <div class="hero-meta">
-            <div><div class="num">15</div><div class="lbl">Mentorados</div></div>
-            <div><div class="num">2</div><div class="lbl">Sócios-mentores</div></div>
-            <div><div class="num">Trimestral</div><div class="lbl">Ciclo</div></div>
-            <div><div class="num">Mensal</div><div class="lbl">Cadência</div></div>
+            <div><div class="num">Trimestral</div><div class="lbl">Cadência</div></div>
+            <div><div class="num">1 a 4</div><div class="lbl">Escala</div></div>
           </div>
         </div>
       </div>
     </header>
 
     <section class="block"><div class="wrap">
-      <div class="sec-eyebrow">01 · O que é (e o que não é)</div>
-      <h2>Mentoria não é reunião de <span class="lime">status</span></h2>
-      <p class="body">Três coisas costumam ser confundidas e, quando misturadas, o programa vira reunião de projeto disfarçada e o desenvolvimento nunca acontece. O Afinar separa isso de forma explícita:</p>
-      <h3><span class="idx">·</span>Mentoria</h3>
-      <p class="body">Desenvolvimento de carreira e visão de longo prazo. O sócio compartilha experiência e abre caminho. <strong>É o coração deste programa.</strong></p>
-      <h3><span class="idx">·</span>Coaching</h3>
-      <p class="body">Performance específica, em que o mentorado é levado a encontrar as próprias respostas por meio de boas perguntas. <strong>Entra como componente</strong>, sobretudo com quem já tem repertório.</p>
-      <div class="ops-warning">
-        <h3><span class="idx" style="color:var(--carmim)">·</span>Suporte operacional <span class="badge-carmim">Não faz parte da mentoria</span></h3>
-        <p class="body">"Me ajuda com essa campanha." Isso é gestão do dia a dia e <strong>tem outro canal</strong>. Não ocupa a sessão de mentoria. Sem essa fronteira, o programa desanda.</p>
-      </div>
-      <div class="lead-note">Regra da casa: o que se discute no Afinar não vira insumo de avaliação de desempenho. Sem essa garantia, ninguém expõe fraqueza real, e mentoria sem franqueza é teatro.</div>
-    </div></section>
+      <div class="sec-eyebrow">Antes de preencher</div>
+      <h2>Como funciona este formulário</h2>
+      <p class="body">Este é o instrumento de <strong>avaliação de desempenho</strong> do Afinar. É diferente da mentoria mensal: aqui existe nota, comparação e um gap calculado. Preenchido <strong>uma vez por ciclo, a cada três meses</strong>.</p>
 
-    <section class="block"><div class="wrap">
-      <div class="sec-eyebrow">01 · Como se encaixa no que já existe</div>
-      <h2>Separado do feedback formal, não <span class="lime">desconectado</span></h2>
-      <p class="body">A cultura da casa já prevê um ritual trimestral de <strong>feedback formal individual</strong> (gestor e colaborador, focado em performance). O Afinar é um processo distinto: foco em desenvolvimento e carreira, conduzido por Val e Luiz. São coisas diferentes de propósito, mas precisam conversar, senão a pessoa recebe leituras contraditórias sobre a própria trajetória.</p>
-      <div class="metaphor">
-        <div class="side carmim-side" style="border-left-color:var(--carmim)">
-          <small>Feedback formal (já existe)</small>
-          <p>Trimestral. Avalia performance. Conduzido pela gestão direta. Alimenta decisões de cargo e reconhecimento.</p>
-        </div>
-        <div class="side on">
-          <small>Afinar (este programa)</small>
-          <p>Mensal. Desenvolve competência e carreira. Conduzido por Val e Luiz. Confidencial, não alimenta avaliação.</p>
+      <div class="steps">
+        <div class="step"><div class="snum"></div><p><strong>Você preenche primeiro.</strong> Em cada competência da matriz, dê uma nota de 1 a 4 pra você mesmo: é a sua autoavaliação.</p></div>
+        <div class="step"><div class="snum"></div><p><strong>Seu mentor preenche depois.</strong> Ele avalia os mesmos itens, de forma independente, sem ver sua nota antes de lançar a dele.</p></div>
+        <div class="step"><div class="snum"></div><p><strong>O gap é automático.</strong> A diferença entre as duas notas aparece na hora e é o ponto de partida da conversa do ciclo.</p></div>
+        <div class="step"><div class="snum"></div><p><strong>Depois da matriz, vem o PDI.</strong> Registre onde você está, pra onde quer ir e o plano do trimestre.</p></div>
+      </div>
+
+      <div class="scale-note">
+        <div class="sn-title">Parâmetros de cada nota</div>
+        <div class="scale">
+          <div class="scale-cell"><div class="lv">1</div><div class="nm">Não faz sozinho</div><div class="ds">Depende de instrução passo a passo.</div></div>
+          <div class="scale-cell"><div class="lv">2</div><div class="nm">Faz com supervisão</div><div class="ds">Executa, mas precisa de revisão frequente.</div></div>
+          <div class="scale-cell"><div class="lv">3</div><div class="nm">Faz sozinho</div><div class="ds">Autonomia e qualidade consistente.</div></div>
+          <div class="scale-cell"><div class="lv">4</div><div class="nm">Ensina / eleva</div><div class="ds">Desenvolve outros e propõe melhorias.</div></div>
         </div>
       </div>
+      <div class="lead-note">Meta realista para o ciclo: mover a maioria dos itens em um nível (por exemplo, de 2 para 3). Chegar a 4 é exceção, não expectativa.</div>
     </div></section>
-
-    <section class="block"><div class="wrap">
-      <div class="sec-eyebrow">02 · O princípio</div>
-      <h2>O mesmo martelo, virado <span class="lime">para dentro</span></h2>
-      <p class="body">A hit.hammers testa marcas para descobrir o que é oco e o que ressoa. Uma matriz de competências faz exatamente isso com uma carreira: mostra onde a pessoa ainda soa oco e onde já vibra com sentido. A mentoria é o toque preciso que transforma um no outro.</p>
-      <div class="metaphor">
-        <div class="side"><small>Se soar oco</small><p>Identificamos o gap com honestidade e construímos um plano para preencher.</p></div>
-        <div class="side on"><small>Se vibrar com sentido</small><p>Reforçamos, damos palco e transformamos força individual em padrão do time.</p></div>
-      </div>
-      <p class="body">O toque aqui é de calibração, não de demolição. O objetivo nunca é apontar falha. É afinar potencial que já existe.</p>
-      <p class="body">Isso não é teoria importada de fora. É a própria cultura da casa aplicada ao desenvolvimento das pessoas: <strong>conversas difíceis são bem-vindas</strong>, <strong>feedback negativo é sempre em privado</strong>, <strong>toda combinação vira registro</strong> e <strong>cada pessoa traz uma iniciativa nova a cada trimestre</strong>. A matriz e o roteiro a seguir foram desenhados para dar corpo a esses valores, não para substituí-los.</p>
-    </div></section>
-
-    <section class="block"><div class="wrap">
-      <div class="sec-eyebrow">03 · Estrutura de mentores</div>
-      <h2>Dois mentores plenos, dois olhares</h2>
-      <p class="body">Val e Luiz mentoram qualquer tema, do ofício técnico à visão de carreira. Não há divisão de assunto entre eles. Cada um conduz a pessoa por inteiro.</p>
-      <p class="body">O valor de ter dois mentores não está em repartir a matéria, e sim em oferecer <strong>duas experiências distintas sobre a mesma carreira</strong>. São trajetórias diferentes, mais de 30 anos e mais de 20 anos de estrada, formações e vivências que não se sobrepõem. A pessoa que passa pelos dois ao longo do tempo recebe dois repertórios, duas formas de ler o mesmo desafio. É isso que enriquece.</p>
-      <div class="roles">
-        <div class="role-card">
-          <div class="role-tag">Mentor pleno</div><div class="role-name">Val</div>
-          <div class="role-editable">Mentora qualquer tema</div>
-          <ul>
-            <li>Trajetória de mais de 30 anos entre marca, criação e liderança de negócios</li>
-            <li>Traz o olhar de quem construiu marcas do zero e liderou pessoas</li>
-            <li>Conduz do ofício técnico à carreira, conforme o que a pessoa precisa</li>
-          </ul>
-        </div>
-        <div class="role-card carmim">
-          <div class="role-tag">Mentor pleno</div><div class="role-name">Luiz</div>
-          <div class="role-editable carmim">Mentora qualquer tema</div>
-          <ul>
-            <li>Mais de 20 anos com foco em performance, gestão orientada a resultado e growth</li>
-            <li>Traz o olhar de quem pauta decisão em indicador e método</li>
-            <li>Conduz do ofício técnico à carreira, conforme o que a pessoa precisa</li>
-          </ul>
-        </div>
-      </div>
-      <div class="lead-note">Por isso a pessoa passa pelos dois ao longo do ano: não para trocar de assunto, mas para ganhar dois ângulos sobre a própria trajetória. O que muda de um mentor para o outro é a lente, não o escopo.</div>
-    </div></section>
-
-    <section class="block"><div class="wrap">
-      <div class="sec-eyebrow">04 · Diagnóstico</div>
-      <h2>Matriz de competências <span class="lime">observáveis</span></h2>
-      <p class="body">Nada de teste de personalidade genérico. A base é uma matriz de comportamentos observáveis. Cada colaborador se autoavalia; o mentor avalia em paralelo. <strong>O gap entre as duas notas é o insight mais valioso</strong>. Revela desalinhamento de percepção e vira a pauta da primeira sessão.</p>
-      <div class="scale">
-        <div class="scale-cell"><div class="lv">1</div><div class="nm">Não faz sozinho</div><div class="ds">Depende de instrução passo a passo.</div></div>
-        <div class="scale-cell"><div class="lv">2</div><div class="nm">Faz com supervisão</div><div class="ds">Executa, mas precisa de revisão frequente.</div></div>
-        <div class="scale-cell"><div class="lv">3</div><div class="nm">Faz sozinho</div><div class="ds">Autonomia e qualidade consistente.</div></div>
-        <div class="scale-cell"><div class="lv">4</div><div class="nm">Ensina / eleva</div><div class="ds">Desenvolve outros e propõe melhorias.</div></div>
-      </div>
-      <p class="body">Meta realista para o ano: mover a maioria dos itens em <strong>um nível na matriz</strong> (por exemplo, de 2 para 3). Consistência de avanço vale mais que saltos isolados. Chegar a 4 é exceção, não expectativa.</p>
-    </div></section>
-
-    <section class="block"><div class="wrap">
-      <div class="sec-eyebrow">05 · A sessão · 1 hora · mensal</div>
-      <h2>Roteiro híbrido: diretivo no técnico, GROW no resto</h2>
-      <p class="body">GROW puro pressupõe que a pessoa já tem repertório para gerar as próprias opções, o que nem sempre é o caso, dependendo do tema e da familiaridade com ele. Por isso o roteiro bifurca no bloco central: ensino direto quando o tema é técnico e novo para a pessoa, perguntas quando é comportamental ou de carreira.</p>
-      <div class="flow">
-        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Check-in</h4><p>Como está, o que aconteceu desde a última sessão.</p></div><div class="flow-time">5 min</div></div>
-        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Revisão de compromissos</h4><p>O que combinamos foi feito? Se não, por quê? Sem isso, vira conversa sem consequência.</p></div><div class="flow-time">10 min</div></div>
-        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Foco do mês</h4><p>Técnico vira modo ensino: demonstra, explica o porquê, dá referência e um desafio. Carreira e comportamento viram modo GROW: Goal, Reality, Options, Way forward.</p></div><div class="flow-time">30 min</div></div>
-        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Compromisso</h4><p>Máximo 2 ações concretas com prazo. O principal deve ser um desafio no trabalho real, não "assistir a um curso".</p></div><div class="flow-time">10 min</div></div>
-        <div class="flow-step"><div class="flow-num"></div><div class="flow-body"><h4>Registro</h4><p>Anota o combinado no PDI. Fecha o loop.</p></div><div class="flow-time">5 min</div></div>
-      </div>
-      <div class="lead-note">Regra de ouro: no máximo 2 compromissos por sessão. Excesso de tarefas leva a nenhuma executada e ao desengajamento.</div>
-    </div></section>
-
-    <section class="block"><div class="wrap">
-      <div class="sec-eyebrow">06 · Plano de desenvolvimento</div>
-      <h2>PDI vivo, no modelo <span class="lime">70·20·10</span></h2>
-      <p class="body">Uma página por pessoa, revisada a cada trimestre. Registra onde a pessoa está (3 forças, 3 gaps prioritários da matriz), onde quer chegar em 12 meses, e o plano do trimestre distribuído segundo o princípio 70·20·10, que evita o erro de reduzir desenvolvimento a "fazer um curso".</p>
-      <div class="pdi">
-        <div class="pdi-col"><div class="pct">70%</div><div class="pt">No trabalho real</div><p>Qual projeto ou desafio concreto vai desenvolver a competência-alvo. O grosso do aprendizado mora aqui.</p></div>
-        <div class="pdi-col"><div class="pct">20%</div><div class="pt">Com pessoas</div><p>Com quem vai aprender: o mentor, um par mais experiente, uma referência interna de outra área.</p></div>
-        <div class="pdi-col"><div class="pct">10%</div><div class="pt">Formal</div><p>Curso, leitura ou material estruturado. Complementa, não substitui, a prática.</p></div>
-      </div>
-    </div></section>
-
-    <div class="part-divider"><div class="wrap">
-      <div class="pd-eyebrow">Parte 2 · Seu formulário</div>
-      <h2>Do método à <span class="lime">prática</span></h2>
-      <p>Preencha a matriz de competências (sua autoavaliação) e a ficha de PDI. A matriz calcula o gap sozinha. Ao final, salve o formulário para que seu mentor possa visualizar suas respostas. Você poderá voltar a essa página para conferir as avaliações dele e os possíveis gaps.</p>
-    </div></div>
   </div><!-- /metodo -->
 
   <!-- ---------- INSTRUMENTO 1 · MATRIZ ---------- -->
@@ -945,7 +1015,7 @@
       </div>
       <div class="field-row">
         <div class="field"><label>Mentor deste ciclo</label>
-          <input type="text" id="m_mentor_view" readonly placeholder="Definido pelo gestor na Seção 03">
+          <input type="text" id="m_mentor_view" readonly placeholder="Definido automaticamente pelo rodízio">
         </div>
         <div class="field"><label>Data de resposta</label><input type="date" id="m_data" onchange="atualizarAlertaForm()"></div>
       </div>
@@ -954,16 +1024,6 @@
         <span><i style="background:var(--lime)"></i> Gap positivo: mentor vê mais força que a própria pessoa</span>
         <span><i style="background:var(--carmim)"></i> Gap negativo: pessoa se vê melhor do que o mentor observa</span>
         <span><i style="background:var(--grey)"></i> Zero: percepções alinhadas</span>
-      </div>
-
-      <div class="scale-highlight">
-        <div class="sh-title">Antes de preencher: o que cada nota significa</div>
-        <div class="scale">
-          <div class="scale-cell"><div class="lv">1</div><div class="nm">Não faz sozinho</div><div class="ds">Depende de instrução passo a passo.</div></div>
-          <div class="scale-cell"><div class="lv">2</div><div class="nm">Faz com supervisão</div><div class="ds">Executa, mas precisa de revisão frequente.</div></div>
-          <div class="scale-cell"><div class="lv">3</div><div class="nm">Faz sozinho</div><div class="ds">Autonomia e qualidade consistente.</div></div>
-          <div class="scale-cell"><div class="lv">4</div><div class="nm">Ensina / eleva</div><div class="ds">Desenvolve outros e propõe melhorias.</div></div>
-        </div>
       </div>
 
       <div class="matrix-block" id="matrix-root"></div>
@@ -991,10 +1051,19 @@
         <label>Onde estou · 3 gaps prioritários</label>
         <textarea id="p_gaps" placeholder="Os três gaps a trabalhar neste ciclo" oninput="atualizarAlertaForm()"></textarea>
       </div>
+
+      <h3>Onde eu me reconheço agora</h3>
+      <p class="body" style="margin-top:-6px">Marque 2 ou 3 frases que mais parecem com você hoje. Não é teste, é ponto de partida, pode mudar de um ciclo pro outro.</p>
+      <div class="anchor-grid" id="anchor-root"></div>
+
       <div class="field" style="margin:20px 0">
         <label>Onde quero chegar · aspiração em 12 meses</label>
         <textarea id="p_aspiracao" placeholder="Direção de carreira e 2 ou 3 competências-alvo" oninput="atualizarAlertaForm()"></textarea>
       </div>
+
+      <h3>Como eu aprendo melhor</h3>
+      <p class="body" style="margin-top:-6px">Marque a(s) que mais parecem com você. Ajuda a decidir o formato certo do plano abaixo, não o conteúdo, o jeito de aprender.</p>
+      <div class="anchor-grid" id="kolb-root"></div>
 
       <h3>Plano do trimestre · 70 · 20 · 10</h3>
       <div class="pdi-plan-block pdi-70">
@@ -1013,76 +1082,6 @@
       <h3>Compromissos do mês · máximo 2</h3>
       <div id="goals-root"></div>
       <button class="add-link" id="btn-add-goal" onclick="addGoal()">+ Adicionar compromisso</button>
-    </div>
-  </section>
-
-  <!-- ---------- INSTRUMENTO 3 · ROTEIRO (só gestor) ---------- -->
-  <section class="tool" id="inst3">
-    <div class="wrap">
-      <div class="sec-eyebrow">Instrumento 03 · Condução · uso do mentor</div>
-      <h2>Roteiro de sessão</h2>
-      <p class="body">Seção exclusiva do mentor. Defina quem conduz este mentorado e anote a conversa. O colaborador não vê esta seção.</p>
-
-      <div class="field-row">
-        <div class="field"><label>Mentor deste mentorado</label>
-          <select id="r_mentor">
-            <option value="">Selecione</option>
-            <option>Val</option>
-            <option>Luiz</option>
-          </select>
-        </div>
-        <div class="field"><label>Data da sessão</label><input type="date" id="r_data"></div>
-      </div>
-
-      <details class="grow-step" open>
-        <summary><span class="letter">1</span><span>Check-in <small class="st">5 min</small></span></summary>
-        <div class="grow-body">
-          <ul><li>Como você está? O que aconteceu desde a última conversa?</li></ul>
-          <textarea id="r_checkin" placeholder="Anotações"></textarea>
-        </div>
-      </details>
-      <details class="grow-step">
-        <summary><span class="letter">2</span><span>Revisão de compromissos <small class="st">10 min</small></span></summary>
-        <div class="grow-body">
-          <ul><li>O que combinamos foi feito?</li><li>Se não, o que atrapalhou? O que a gente aprende com isso?</li></ul>
-          <textarea id="r_revisao" placeholder="Status dos compromissos anteriores"></textarea>
-        </div>
-      </details>
-      <details class="grow-step">
-        <summary><span class="letter">G</span><span>Foco do mês · Goal <small class="st">parte do bloco de 30 min</small></span></summary>
-        <div class="grow-body">
-          <ul><li>Qual o objetivo desta sessão e deste ciclo?</li><li>O que seria um bom resultado para você sair daqui hoje?</li></ul>
-          <textarea id="r_goal" placeholder="Objetivo definido"></textarea>
-        </div>
-      </details>
-      <details class="grow-step">
-        <summary><span class="letter">R</span><span>Reality <small class="st">onde estamos de fato</small></span></summary>
-        <div class="grow-body">
-          <ul><li>Onde as coisas estão hoje, com evidências concretas?</li><li>O que você já tentou? O que funcionou e o que não?</li><li>Se técnico e novo para a pessoa: aqui o mentor demonstra e explica o porquê.</li></ul>
-          <textarea id="r_reality" placeholder="Situação atual"></textarea>
-        </div>
-      </details>
-      <details class="grow-step">
-        <summary><span class="letter">O</span><span>Options <small class="st">caminhos possíveis</small></span></summary>
-        <div class="grow-body">
-          <ul><li>Quais caminhos existem? E se não houvesse obstáculo, o que faria?</li><li>Qual desses caminhos te parece mais viável agora?</li></ul>
-          <textarea id="r_options" placeholder="Opções levantadas"></textarea>
-        </div>
-      </details>
-      <details class="grow-step">
-        <summary><span class="letter">W</span><span>Way forward · Compromisso <small class="st">10 min</small></span></summary>
-        <div class="grow-body">
-          <ul><li>O que você vai fazer até a próxima sessão? (máximo 2 ações)</li><li>Qual o prazo? Como vou saber que aconteceu?</li></ul>
-          <textarea id="r_way" placeholder="Compromissos assumidos e prazos"></textarea>
-        </div>
-      </details>
-      <details class="grow-step">
-        <summary><span class="letter">✓</span><span>Registro <small class="st">5 min</small></span></summary>
-        <div class="grow-body">
-          <ul><li>Transferir os compromissos para o PDI.</li></ul>
-          <textarea id="r_registro" placeholder="Notas finais para o handoff ou próxima sessão"></textarea>
-        </div>
-      </details>
     </div>
   </section>
 
@@ -1228,12 +1227,6 @@ const EIXOS = [
     "Autonomia para executar sem retrabalho",
     "Consistência entre uma entrega e outra"
   ]},
-  { nome: "Estratégico e de negócio", itens: [
-    "Entende o objetivo do job, não só a tarefa",
-    "Embasa decisões em dados e referência (não chuta)",
-    "Conecta o que faz ao resultado do cliente",
-    "Enxerga o público antes de produzir"
-  ]},
   { nome: "Comportamental e condutas", itens: [
     "Comunicação clara, adaptada a quem ouve",
     "Cumpre prazo negociado (o prazo é do cronograma)",
@@ -1242,14 +1235,45 @@ const EIXOS = [
     "Colabora e compartilha saber com o time",
     "Usa o canal certo pra cada comunicação e responde dentro do prazo",
     "Aprende com o erro sem repeti-lo"
-  ]},
-  { nome: "Carreira e iniciativa", itens: [
-    "Clareza de onde quer chegar",
-    "Traz iniciativa nova a cada ciclo",
-    "Se antecipa e participa ativamente das reuniões do time",
-    "Vai além do que foi pedido quando faz sentido"
   ]}
 ];
+
+/* ---------- ÂNCORAS DE CARREIRA (Instrumento 02, múltiplas, sem nota) ---------- */
+const ANCORAS = [
+  { t: "Técnico / especialista", d: "Quero ser referência funda em um ofício, não trocar isso por gestão." },
+  { t: "Gestão geral", d: "Quero integrar áreas e liderar pessoas, mais do que dominar uma técnica só." },
+  { t: "Autonomia", d: "Preciso definir meu próprio jeito de trabalhar, sem microgestão." },
+  { t: "Segurança e estabilidade", d: "Prefiro previsibilidade e um caminho claro a arriscar constantemente." },
+  { t: "Criatividade empreendedora", d: "Quero criar algo novo do zero, ideias e projetos próprios." },
+  { t: "Serviço a uma causa", d: "O que me move é o impacto do trabalho, não o cargo em si." },
+  { t: "Desafio", d: "Preciso de problema difícil, entedio com rotina repetida." },
+  { t: "Estilo de vida", d: "Equilíbrio entre trabalho e o resto da vida pesa mais que subir de cargo." }
+];
+function montarAncoras(){
+  const root = document.getElementById("anchor-root");
+  root.innerHTML = ANCORAS.map((a, i) => `
+    <label class="anchor-chip">
+      <input type="checkbox" id="anc_${i}">
+      <span><span class="at">${a.t}</span><span class="ad">${a.d}</span></span>
+    </label>`).join("");
+}
+
+/* ---------- ESTILOS DE APRENDIZAGEM (Kolb, múltiplos, sem nota) ---------- */
+const KOLB = [
+  { t: "Divergente", d: "Aprendo melhor observando, conectando ideias diferentes e ouvindo várias perspectivas antes de agir." },
+  { t: "Assimilador", d: "Aprendo melhor com teoria e estrutura, entendendo o modelo antes de colocar a mão na massa." },
+  { t: "Convergente", d: "Aprendo melhor testando na prática, resolvendo um problema real e ajustando pelo resultado." },
+  { t: "Acomodador", d: "Aprendo melhor fazendo, errando rápido e me adaptando no meio do processo." }
+];
+function montarKolb(){
+  const root = document.getElementById("kolb-root");
+  root.innerHTML = KOLB.map((k, i) => `
+    <label class="anchor-chip">
+      <input type="checkbox" id="kolb_${i}">
+      <span><span class="at">${k.t}</span><span class="ad">${k.d}</span></span>
+    </label>`).join("");
+}
+
 function opts(){
   let s = '<option value=""></option>';
   for(let i=1;i<=4;i++) s += `<option value="${i}">${i}</option>`;
@@ -1322,9 +1346,8 @@ function saveForm(nome,ano,mes,rec){
   localStorage.setItem(keyOf(nome,ano,mes), JSON.stringify(rec));
 }
 function novoRegistro(nome,ano,mes){
-  return { nome:nome, ano:ano, mes:mes, funcao:"", data:"", mentor:"", self:{}, ment:{},
-    pdi:{ forcas:"", gaps:"", aspiracao:"", p70:"", p20:"", p10:"", compromissos:[] },
-    roteiro:{ data:"", checkin:"", revisao:"", goal:"", reality:"", options:"", way:"", registro:"" },
+  return { nome:nome, ano:ano, mes:mes, funcao:"", data:"", self:{}, ment:{},
+    pdi:{ forcas:"", gaps:"", aspiracao:"", p70:"", p20:"", p10:"", compromissos:[], ancoras:[], kolb:[] },
     reuniao:{ status:null, data:"", hora:"" },
     updatedAt:0 };
 }
@@ -1358,6 +1381,39 @@ function statusRec(rec){
   if(temSelf || temPdi) return rec.selfCompleto ? "resp" : "incompleto";
   return "vazio";
 }
+
+/* =========================================================
+   CAMADA DE DADOS · ANOTAÇÕES MENSAIS DO COLABORADOR
+   Privadas: os mentores nunca leem esta chave. Separada da
+   avaliação de ciclo (self/ment/pdi), que agora vive por ciclo.
+========================================================== */
+const PREFIX_NOTAS = "afinar_v4_notas::";
+function keyNotas(nome,ano,mes){ return PREFIX_NOTAS + nome + "::" + ano + "-" + String(mes).padStart(2,"0"); }
+function loadNotas(nome,ano,mes){
+  const raw = localStorage.getItem(keyNotas(nome,ano,mes));
+  return raw ? JSON.parse(raw) : null;
+}
+function saveNotas(nome,ano,mes,rec){
+  rec.updatedAt = Date.now();
+  localStorage.setItem(keyNotas(nome,ano,mes), JSON.stringify(rec));
+}
+function novoNotas(nome,ano,mes){
+  return { nome:nome, ano:ano, mes:mes, abertura:"", retomada:"", realidade:"", caminhos:"",
+    c1acao:"", c1prazo:"", c2acao:"", c2prazo:"", livre:"", updatedAt:0 };
+}
+function statusNotas(rec){
+  if(!rec) return "vazio";
+  const tem = rec.abertura||rec.retomada||rec.realidade||rec.caminhos||rec.livre||rec.c1acao||rec.c2acao;
+  return tem ? "escrito" : "vazio";
+}
+
+/* =========================================================
+   AVALIAÇÃO DE CICLO (matriz + PDI)
+   Agora por ciclo (trimestral), não mais por mês: reaproveita o
+   registro mensal (self/ment/pdi) já existente, ancorado sempre
+   no primeiro mês do ciclo, para não recriar toda a camada de dados.
+========================================================== */
+function mesRepresentanteDoCiclo(ciclo){ return mesesDoCiclo(ciclo)[0]; }
 
 /* =========================================================
    ESTATÍSTICAS DE REUNIÃO
@@ -1488,7 +1544,7 @@ function logout(){
    NAVEGAÇÃO
 ========================================================== */
 function showScreen(s){
-  ["login","gestor","hub","settings","app","calendar"].forEach(x=>{ document.getElementById("screen-"+x).hidden = (x!==s); });
+  ["login","gestor","hub","settings","app","calendar","notas"].forEach(x=>{ document.getElementById("screen-"+x).hidden = (x!==s); });
   window.scrollTo(0,0);
 }
 
@@ -1695,23 +1751,44 @@ function renderHub(){
   document.getElementById("year-label").textContent = ANO_VISIVEL;
   const ehGestor = (ROLE==="gestor");
   document.getElementById("hub-eyebrow").textContent = ehGestor ? "Linha do tempo do mentorado" : "Sua linha do tempo";
-  document.getElementById("hub-title").innerHTML = "Formulários de " + '<span class="lime">'+esc(EDITING)+'</span>';
+  document.getElementById("hub-title").innerHTML = (ehGestor ? "Anotações de " : "Minhas anotações · ") + '<span class="lime">'+esc(EDITING)+'</span>';
   document.getElementById("hub-who").innerHTML = ehGestor
-    ? 'Avaliando <b>'+esc(EDITING)+'</b>'
+    ? 'Acompanhando <b>'+esc(EDITING)+'</b>'
     : '<b>'+esc(EDITING)+'</b><span class="pill">Colaborador</span>';
+  document.getElementById("hub-desc").textContent = ehGestor
+    ? "Os meses são anotações pessoais do colaborador, você não tem acesso a elas. Clique no card vermelho para abrir a avaliação de desempenho do ciclo."
+    : "Os meses são suas anotações pessoais, só você vê. A avaliação de desempenho acontece uma vez por ciclo, no card em destaque.";
 
   const root = document.getElementById("cycles-root");
   let html = "";
   for(let c=1;c<=4;c++){
     const meses = mesesDoCiclo(c);
-    let doneCount = 0;
     let cellsHtml = "";
     meses.forEach(m=>{
-      const rec = loadForm(EDITING, ANO_VISIVEL, m);
-      const st = statusRec(rec);
-      if(st==="done") doneCount++;
-      const stTxt = st==="done" ? "Avaliado" : st==="resp" ? "Respondido" : st==="incompleto" ? "Incompleto" : "Sem avaliação";
       const isNow = (ANO_VISIVEL===CUR.ano && m===CUR.mes);
+
+      // status do mês: para o colaborador reflete as próprias anotações;
+      // para o mentor é neutro, já que ele não acessa esse conteúdo.
+      let st, stTxt, mcMain;
+      if(ehGestor){
+        st = "gestorview";
+        stTxt = "Uso do colaborador";
+        mcMain = '<div class="mc-main">'
+              +   '<span class="mc-m">'+MESES[m-1]+'</span>'
+              +   '<span class="mc-s"><i></i>'+stTxt+'</span>'
+              + '</div>';
+      } else {
+        const notas = loadNotas(EDITING, ANO_VISIVEL, m);
+        const stn = statusNotas(notas);
+        st = stn==="escrito" ? "done" : "vazio";
+        stTxt = stn==="escrito" ? "Anotado" : "Sem anotação";
+        mcMain = '<button type="button" class="mc-main" onclick="abrirNotasMes('+ANO_VISIVEL+','+m+')">'
+              +   '<span class="mc-m">'+MESES[m-1]+'</span>'
+              +   '<span class="mc-s"><i></i>'+stTxt+'</span>'
+              + '</button>';
+      }
+
+      const rec = loadForm(EDITING, ANO_VISIVEL, m); // só para a reunião (data/hora)
       const reun = rec && rec.reuniao ? rec.reuniao : null;
       // data/hora empilhadas (data em cima, horário embaixo)
       let dtTop, dtBot, reunClass;
@@ -1738,23 +1815,30 @@ function renderHub(){
       const dtHtml = ROLE==="gestor"
         ? '<button type="button" class="mc-dt '+reunClass+'" onclick="event.stopPropagation();abrirModalReuniao('+ANO_VISIVEL+','+m+')">'+dtInner+'</button>'
         : (reun && reun.status ? '<div class="mc-dt '+reunClass+'">'+dtInner+'</div>' : '');
-      cellsHtml += '<div class="month-cell mc-'+st+(isNow?" mc-current":"")+'">'
-            + '<div class="mc-main" onclick="abrirFormPeriodo('+ANO_VISIVEL+','+m+')">'
-            +   '<span class="mc-m">'+MESES[m-1]+'</span>'
-            +   '<span class="mc-s"><i></i>'+stTxt+'</span>'
-            + '</div>'
+      cellsHtml += '<div class="month-cell mc-'+st+(isNow?" mc-current":"")+(ehGestor?" mc-locked":"")+'">'
+            + mcMain
             + '<div class="mc-num">'+String(m).padStart(2,'0')+'</div>'
             + dtHtml
             + '</div>';
     });
+
+    // avaliação de desempenho do ciclo (matriz + PDI), agora trimestral e em destaque
+    const avalRec = loadForm(EDITING, ANO_VISIVEL, mesRepresentanteDoCiclo(c));
+    const avalSt = statusRec(avalRec);
+    const avalRespondido = avalSt !== "vazio";
+    const avalTxt = avalRespondido ? "Já respondido" : "Ainda não respondido";
+    const avalHtml = '<button type="button" class="cf-aval'+(avalRespondido?" cf-done":"")+'" onclick="abrirAvaliacaoCiclo('+ANO_VISIVEL+','+c+')">'
+          + '<span class="cf-aval-title">Avaliação de desempenho</span>'
+          + '<span class="cf-aval-status">'+avalTxt+'</span>'
+          + '</button>';
+
     const cImg = CICLO_IMGS[c];
     const bandHtml = cImg
       ? '<div class="ch-band"><img src="'+cImg+'" alt="Ciclo '+c+'" loading="lazy" onerror="this.closest(\'.ch-band\').classList.add(\'ch-fallback\')"><div class="ch-band-filter"></div></div>'
       : '<div class="ch-band"></div>';
     html += '<div class="cycle-col">'
           + '<div class="ch"><b>Ciclo '+c+'</b><div class="ch-year">'+ANO_VISIVEL+'</div>'+bandHtml+'</div>'
-          + '<div class="cb">'+cellsHtml+'</div>'
-          + '<div class="cf'+(doneCount===3?' done':'')+'">'+doneCount+' de 3 avaliados</div>'
+          + '<div class="cb">'+cellsHtml+avalHtml+'</div>'
           + '</div>';
   }
   root.innerHTML = html;
@@ -1823,13 +1907,57 @@ function abrirFormPeriodo(ano,mes){
 }
 function voltarHub(){ renderHub(); showScreen("hub"); }
 
+/* ---- abrir avaliação de ciclo (matriz + PDI), ancorada no 1º mês do ciclo ---- */
+function abrirAvaliacaoCiclo(ano,ciclo){
+  abrirFormPeriodo(ano, mesRepresentanteDoCiclo(ciclo));
+  document.getElementById("pb-month").textContent = "Avaliação de desempenho";
+}
+
+/* =========================================================
+   ANOTAÇÕES MENSAIS (colaborador, privado)
+========================================================== */
+let NOTA_PERIODO = null;
+function abrirNotasMes(ano,mes){
+  if(ROLE !== "colab") return; // travado para o mentor
+  NOTA_PERIODO = { ano:ano, mes:mes };
+  const rec = loadNotas(EDITING,ano,mes) || novoNotas(EDITING,ano,mes);
+  set("nt_abertura", rec.abertura); set("nt_retomada", rec.retomada);
+  set("nt_realidade", rec.realidade); set("nt_caminhos", rec.caminhos);
+  set("nt_c1acao", rec.c1acao); set("nt_c1prazo", rec.c1prazo);
+  set("nt_c2acao", rec.c2acao); set("nt_c2prazo", rec.c2prazo);
+  set("nt_livre", rec.livre);
+  document.getElementById("nt-cycle").textContent = "Ciclo " + cicloDe(mes);
+  document.getElementById("nt-month").textContent = MESES[mes-1] + " de " + ano;
+  document.getElementById("nt-save-status").textContent = rec.updatedAt
+    ? "Última gravação: " + new Date(rec.updatedAt).toLocaleString("pt-BR")
+    : "Suas anotações ficam salvas automaticamente neste navegador.";
+  showScreen("notas");
+}
+let NOTAS_SALVAR_TIMEOUT = null;
+function agendarSalvarNotas(){
+  clearTimeout(NOTAS_SALVAR_TIMEOUT);
+  NOTAS_SALVAR_TIMEOUT = setTimeout(salvarNotas, 500);
+}
+function salvarNotas(){
+  if(!EDITING || !NOTA_PERIODO || ROLE!=="colab") return;
+  const {ano,mes} = NOTA_PERIODO;
+  const rec = loadNotas(EDITING,ano,mes) || novoNotas(EDITING,ano,mes);
+  rec.nome = EDITING; rec.ano = ano; rec.mes = mes;
+  rec.abertura = val("nt_abertura"); rec.retomada = val("nt_retomada");
+  rec.realidade = val("nt_realidade"); rec.caminhos = val("nt_caminhos");
+  rec.c1acao = val("nt_c1acao"); rec.c1prazo = val("nt_c1prazo");
+  rec.c2acao = val("nt_c2acao"); rec.c2prazo = val("nt_c2prazo");
+  rec.livre = val("nt_livre");
+  saveNotas(EDITING,ano,mes,rec);
+  document.getElementById("nt-save-status").textContent = "Última gravação: " + new Date(rec.updatedAt).toLocaleString("pt-BR");
+}
+
 /* =========================================================
    TRAVAS POR PAPEL
 ========================================================== */
 function aplicarPapelUI(){
   const colab = (ROLE === "colab");
   document.getElementById("metodo").style.display = colab ? "" : "none";
-  document.getElementById("inst3").style.display = colab ? "none" : "";
 
   document.querySelectorAll(".sc-self").forEach(s=> s.disabled = !colab);
   document.querySelectorAll(".sc-ment").forEach(s=> s.disabled = colab);
@@ -1838,6 +1966,7 @@ function aplicarPapelUI(){
 
   document.querySelectorAll("#inst2 input, #inst2 textarea").forEach(el=>{
     if(el.id === "p_nome" || el.id === "p_ciclo"){ el.readOnly = true; return; }
+    if(el.type === "checkbox"){ el.disabled = !colab; return; }
     el.readOnly = !colab;
   });
   document.getElementById("btn-add-goal").style.display = colab ? "" : "none";
@@ -1873,10 +2002,10 @@ function preencherForm(rec){
   set("p_70",p.p70); set("p_20",p.p20); set("p_10",p.p10);
   montarCompromissos(p.compromissos || []);
 
-  const r = rec.roteiro || {};
-  set("r_mentor", mentorDoCiclo(rec.nome, cicloDe(PERIODO.mes))); set("r_data", r.data);
-  set("r_checkin",r.checkin); set("r_revisao",r.revisao); set("r_goal",r.goal);
-  set("r_reality",r.reality); set("r_options",r.options); set("r_way",r.way); set("r_registro",r.registro);
+  const ancorasSel = p.ancoras || [];
+  ANCORAS.forEach((_,i)=>{ const el=document.getElementById("anc_"+i); if(el) el.checked = ancorasSel.includes(i); });
+  const kolbSel = p.kolb || [];
+  KOLB.forEach((_,i)=>{ const el=document.getElementById("kolb_"+i); if(el) el.checked = kolbSel.includes(i); });
 }
 function montarCompromissos(lista){
   const root = document.getElementById("goals-root");
@@ -1929,9 +2058,12 @@ function salvar(){
     const self = {};
     EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{ const id=`e${ei}i${ii}`; const v=val(id+"_self"); if(v) self[id]=v; }));
     rec.self = self;
+    const ancorasSel = ANCORAS.map((_,i)=>i).filter(i=>{ const el=document.getElementById("anc_"+i); return el && el.checked; });
+    const kolbSel = KOLB.map((_,i)=>i).filter(i=>{ const el=document.getElementById("kolb_"+i); return el && el.checked; });
     rec.pdi = {
       forcas:val("p_forcas"), gaps:val("p_gaps"), aspiracao:val("p_aspiracao"),
-      p70:val("p_70"), p20:val("p_20"), p10:val("p_10"), compromissos: coletarCompromissos()
+      p70:val("p_70"), p20:val("p_20"), p10:val("p_10"), compromissos: coletarCompromissos(),
+      ancoras: ancorasSel, kolb: kolbSel
     };
     rec.selfCompleto = colabCompleto();
     rec.selfUpdatedAt = Date.now();   // marca de tempo do lado do colaborador (merge no servidor)
@@ -1939,12 +2071,6 @@ function salvar(){
     const ment = {};
     EIXOS.forEach((e,ei)=> e.itens.forEach((it,ii)=>{ const id=`e${ei}i${ii}`; const v=val(id+"_ment"); if(v) ment[id]=v; }));
     rec.ment = ment;
-    rec.mentor = val("r_mentor");
-    rec.roteiro = {
-      data:val("r_data"), checkin:val("r_checkin"), revisao:val("r_revisao"),
-      goal:val("r_goal"), reality:val("r_reality"), options:val("r_options"),
-      way:val("r_way"), registro:val("r_registro")
-    };
     rec.mentCompleto = mentorSecao1Completo();
     rec.mentUpdatedAt = Date.now();   // marca de tempo do lado do gestor (merge no servidor)
   }
@@ -2416,6 +2542,8 @@ function migrarDados(){
 function bootAfinar(){
   migrarDados();
   montarMatriz();
+  montarAncoras();
+  montarKolb();
   refreshColabDatalist();
   showScreen("login");
 }

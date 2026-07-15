@@ -29,7 +29,10 @@
   const _get = localStorage.getItem.bind(localStorage);
   const _remove = localStorage.removeItem.bind(localStorage);
 
-  const isAfinarKey = k => typeof k === 'string' && k.indexOf(PREFIX) === 0;
+  // afinar_v4_notas:: são as anotações pessoais do colaborador: nunca sobem
+  // para a nuvem, senão o mentor passaria a enxergá-las ao puxar o estado.
+  const PREFIX_PRIVADO = 'afinar_v4_notas::';
+  const isAfinarKey = k => typeof k === 'string' && k.indexOf(PREFIX) === 0 && k.indexOf(PREFIX_PRIVADO) !== 0;
   function cloudData(j) {
     if (j && j.data !== undefined && j.data !== null) return j.data;
     return null;
