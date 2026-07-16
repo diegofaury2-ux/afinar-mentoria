@@ -302,6 +302,12 @@
   .pb-cycle{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:#0a0a0a;background:var(--lime);border-radius:20px;padding:4px 14px}
   .pb-month{font-size:1rem;font-weight:700;color:var(--white)}
 
+  /* ---------- TOGGLE QUINZENAL (tela de anotações) ---------- */
+  .quinzena-toggle{display:inline-flex;background:var(--bg-card);border:1px solid var(--line);border-radius:12px;padding:4px}
+  .quinzena-toggle .qt-btn{background:transparent;border:none;color:var(--grey-soft);font-family:inherit;font-weight:700;font-size:.88rem;padding:9px 20px;border-radius:9px;cursor:pointer}
+  .quinzena-toggle .qt-btn.active{background:var(--lime);color:#0a0a0a}
+  .nt-q-meet{font-family:var(--font-mono);font-size:.78rem;color:var(--grey-soft);margin:10px 0 0}
+
   /* ---------- SAVE BAR ---------- */
   .savebar{position:sticky;bottom:0;z-index:40;background:rgba(10,10,10,.9);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
   .savebar .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:14px;padding-bottom:14px}
@@ -395,19 +401,27 @@
   .month-head .mh-year{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.14em;color:var(--grey-soft);margin-top:2px}
   .month-body{padding:10px;display:flex;flex-direction:column;gap:8px;flex:1}
 
-  .meet-rect{background:var(--bg-card);border:1px solid var(--line);border-radius:9px;padding:11px 14px;cursor:pointer;transition:.14s;
-    display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center}
-  .meet-rect:hover{border-color:var(--lime-dim);transform:translateY(-1px)}
-  .meet-rect .mr-name{font-size:.86rem;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .meet-rect .mr-daydate{font-family:var(--font-mono);text-align:right;line-height:1.15}
-  .meet-rect .mr-day{display:block;font-size:.6rem;text-transform:uppercase;color:var(--grey);letter-spacing:.08em}
-  .meet-rect .mr-date{display:block;font-size:.92rem;font-weight:800;color:var(--lime)}
-  .meet-rect .mr-time{font-family:var(--font-mono);font-size:.8rem;font-weight:700;color:var(--grey-soft);text-align:right;min-width:48px}
-  .meet-rect.empty .mr-day,.meet-rect.empty .mr-date,.meet-rect.empty .mr-time{color:var(--grey);font-weight:600}
-  .meet-rect.empty{border-style:dashed}
-  .meet-rect.conflict{border-color:var(--carmim)}
-  .meet-rect.conflict .mr-date,.meet-rect.conflict .mr-time{color:var(--carmim)}
-  .meet-rect.skip .mr-date,.meet-rect.skip .mr-time{color:var(--grey)}
+  /* linha de rótulos "Quinzenal 1 | Quinzenal 2", entre o cabeçalho do mês e a lista de nomes */
+  .meet-subhead{display:grid;grid-template-columns:1fr 96px 96px;gap:10px;padding:2px 14px 8px;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--grey)}
+  .meet-subhead span:not(:first-child){text-align:center;border-bottom:1px solid var(--line);padding-bottom:6px}
+
+  .meet-row{background:var(--bg-card);border:1px solid var(--line);border-radius:9px;padding:11px 14px;transition:.14s;
+    display:grid;grid-template-columns:1fr 96px 96px;gap:10px;align-items:stretch}
+  .meet-row:hover{border-color:var(--lime-dim)}
+  .meet-row .mr-name{font-size:.86rem;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center}
+
+  .meet-slot{cursor:pointer;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1.15;transition:.14s;padding:2px 4px}
+  .meet-slot:hover{background:rgba(196,224,26,.09)}
+  .meet-slot + .meet-slot{border-left:1px solid var(--line)}
+  .meet-slot .mr-day{font-size:.58rem;text-transform:uppercase;color:var(--grey);letter-spacing:.06em;font-family:var(--font-mono)}
+  .meet-slot .mr-date{font-size:.88rem;font-weight:800;color:var(--lime);font-family:var(--font-mono)}
+  .meet-slot .mr-time{font-family:var(--font-mono);font-size:.68rem;font-weight:700;color:var(--grey-soft)}
+  .meet-slot.empty .mr-day,.meet-slot.empty .mr-date,.meet-slot.empty .mr-time{color:var(--grey);font-weight:600}
+  .meet-slot.conflict .mr-date,.meet-slot.conflict .mr-time{color:var(--carmim)}
+  .meet-slot.skip .mr-date,.meet-slot.skip .mr-time{color:var(--grey)}
+
+  /* tabela de reuniões precisa de mais respiro pras 2 subcolunas (quinzenal 1/2) por colaborador */
+  #screen-calendar .wrap-wide{max-width:1560px}
 
   #calendar-print-root{display:none}
   @media print{
@@ -490,20 +504,23 @@
   /* célula de mês estilo week-card do pôster: rótulo+status à esquerda, número do mês, data/hora à direita */
   .month-cell{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--bg-card);display:flex;align-items:stretch;gap:8px;padding:10px 12px;min-height:66px;transition:.15s;overflow:hidden}
   .month-cell:hover{border-color:var(--lime-dim);transform:translateY(-2px)}
-  .mc-main{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:4px;text-align:left;cursor:pointer;background:none;border:none;font-family:inherit;color:inherit;padding:0}
+  .mc-main{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:5px;text-align:left;cursor:pointer;background:none;border:none;font-family:inherit;color:inherit;padding:0}
   .mc-m{font-family:var(--font-mono);font-size:.95rem;letter-spacing:.02em;text-transform:uppercase;color:var(--grey-soft);font-weight:700}
   .mc-s{font-family:var(--font-mono);font-size:.66rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;color:var(--grey)}
   .mc-s i{width:7px;height:7px;border-radius:50%;background:var(--grey);display:inline-block;flex-shrink:0}
   .mc-num{align-self:center;font-size:2rem;font-weight:800;line-height:1;color:var(--grey);font-family:var(--font-head)}
-  .mc-dt{align-self:center;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:2px;min-width:62px;font-family:var(--font-mono);font-size:.6rem;line-height:1.2;text-align:right;background:none;border:none;padding:0 0 0 4px;color:var(--grey)}
-  button.mc-dt{cursor:pointer}
-  .mc-dt .mc-dt-d{font-weight:800;font-size:.86rem;color:var(--white)}
-  .mc-dt .mc-dt-h{font-size:.68rem;font-weight:700;color:var(--grey-soft)}
-  .mc-dt.rc-done .mc-dt-d{color:var(--lime)}
-  .mc-dt.rc-skip .mc-dt-d{color:var(--carmim)}
-  .mc-dt.rc-agendada .mc-dt-d{color:var(--grey-soft)}
-  .mc-dt.rc-agendada{opacity:.85}
-  button.mc-dt:hover .mc-dt-d{color:var(--lime)}
+  /* data/hora das 2 quinzenas: mesmo padrão enxuto do mc-s, só que alinhado à direita */
+  .mc-dt2{align-self:center;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+  .mc-dtq{font-family:var(--font-mono);font-size:.7rem;line-height:1.6;font-weight:600;display:inline-flex;align-items:center;color:var(--grey);background:none;border:none;padding:0;text-align:right}
+  button.mc-dtq{cursor:pointer}
+  button.mc-dtq:hover{color:var(--grey-soft)}
+  .mc-dtq.rc-done{color:var(--lime)}
+  .mc-dtq.rc-skip{color:var(--carmim)}
+  .mc-dtq.rc-agendada{color:var(--grey-soft)}
+
+  /* aba de colaboradores: card um pouco mais baixo (menos padding/gap) do que o do gestor */
+  .month-cell:not(.mc-locked){padding:8px 12px}
+  .month-cell:not(.mc-locked) .mc-main{gap:4px}
 
   .month-cell.mc-resp .mc-s{color:var(--grey-soft)} .month-cell.mc-resp .mc-s i{background:var(--grey-soft)}
   .month-cell.mc-done .mc-s{color:var(--lime)} .month-cell.mc-done .mc-s i{background:var(--lime)}
@@ -813,9 +830,14 @@
   </div>
 
   <div class="wrap" style="padding-top:22px">
+    <div class="quinzena-toggle" id="nt-q-toggle">
+      <button type="button" class="qt-btn active" id="nt-q1-btn" onclick="selecionarQuinzenaNotas(1)">Quinzenal 1</button>
+      <button type="button" class="qt-btn" id="nt-q2-btn" onclick="selecionarQuinzenaNotas(2)">Quinzenal 2</button>
+    </div>
+    <div class="nt-q-meet" id="nt-q-meet"></div>
     <div class="privacy-box">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-      <p>Estas anotações são <strong>pessoais</strong> e não são acessadas pelos mentores. O objetivo é só te ajudar a organizar as próprias ideias e chegar mais preparado para a conversa mensal.</p>
+      <p>Estas anotações são <strong>pessoais</strong> e não são acessadas pelos mentores. O objetivo é só te ajudar a organizar as próprias ideias e chegar mais preparado para a conversa quinzenal.</p>
     </div>
   </div>
 
@@ -895,7 +917,7 @@
 <div id="screen-roteiro" hidden>
   <div class="appbar">
     <div class="wrap">
-      <div class="who">Roteiro de Mentoria<span class="pill">Guia do mentor · sessão mensal · 1h</span></div>
+      <div class="who">Roteiro de Mentoria<span class="pill">Guia do mentor · sessão quinzenal · 1h</span></div>
       <div class="appbar-actions">
         <button class="btn btn-ghost" onclick="showScreen('gestor')">&larr; Voltar</button>
         <button class="btn btn-ghost" onclick="logout()">Sair</button>
@@ -904,7 +926,7 @@
   </div>
 
   <div class="wrap" style="padding-top:26px;max-width:820px">
-    <p class="hero-lead" style="max-width:none">Um guia rápido para conduzir a sessão, não um roteiro fechado. Percorra as perguntas de cada etapa e escolha as que fazem sentido para o que o mentorado trouxer naquele mês.</p>
+    <p class="hero-lead" style="max-width:none">Um guia rápido para conduzir a sessão, não um roteiro fechado. Percorra as perguntas de cada etapa e escolha as que fazem sentido para o que o mentorado trouxer naquele encontro.</p>
 
     <div class="sec-eyebrow" style="margin-top:28px">Como funciona a sessão</div>
     <h2>Diretivo no técnico, aberto no resto</h2>
@@ -912,7 +934,7 @@
     <div class="rt-flow-strip">
       <div class="rt-flow-chip"><div class="fc-n">Abertura</div></div>
       <div class="rt-flow-chip"><div class="fc-n">Retomada</div></div>
-      <div class="rt-flow-chip"><div class="fc-n">Foco do mês</div></div>
+      <div class="rt-flow-chip"><div class="fc-n">Foco do encontro</div></div>
       <div class="rt-flow-chip"><div class="fc-n">Compromisso</div></div>
       <div class="rt-flow-chip"><div class="fc-n">Fechamento</div></div>
     </div>
@@ -939,7 +961,7 @@
     </div>
 
     <div class="rt-step">
-      <div class="rt-step-head"><span class="rt-letter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span><span class="rt-st-title">Foco do mês</span></div>
+      <div class="rt-step-head"><span class="rt-letter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span><span class="rt-st-title">Foco do encontro</span></div>
       <div class="rt-step-mode"><strong>Técnico e novo:</strong> modo ensino, o mentor demonstra e explica o porquê. <strong>Carreira ou comportamento:</strong> modo aberto, o mentor pergunta, sem papel de avaliador.</div>
       <ul class="rt-q-list">
         <li>O que você quer trazer para a conversa hoje?</li>
@@ -1090,7 +1112,7 @@
     <section class="block"><div class="wrap">
       <div class="sec-eyebrow">Antes de preencher</div>
       <h2>Como funciona este formulário</h2>
-      <p class="body">Este é o instrumento de <strong>avaliação de desempenho</strong> do Afinar. É diferente da mentoria mensal: aqui existe nota, comparação e um gap calculado. Preenchido <strong>uma vez por ciclo, a cada três meses</strong>.</p>
+      <p class="body">Este é o instrumento de <strong>avaliação de desempenho</strong> do Afinar. É diferente da mentoria quinzenal: aqui existe nota, comparação e um gap calculado. Preenchido <strong>uma vez por ciclo, a cada três meses</strong>.</p>
 
       <div class="steps">
         <div class="step"><div class="snum"></div><p><strong>Você preenche primeiro.</strong> Em cada competência da matriz, dê uma nota de 1 a 4 pra você mesmo: é a sua autoavaliação.</p></div>
@@ -1187,7 +1209,7 @@
       </div>
       <p class="save-hint">O 70·20·10 é uma referência consagrada do Center for Creative Leadership, não uma lei exata: use como proporção orientadora do plano, não como meta rígida a bater nos três blocos.</p>
 
-      <h3>Compromissos do mês · máximo 2</h3>
+      <h3>Compromissos da quinzena · máximo 2</h3>
       <div id="goals-root"></div>
       <button class="add-link" id="btn-add-goal" onclick="addGoal()">+ Adicionar compromisso</button>
     </div>
@@ -1306,15 +1328,15 @@ function mentorDoCiclo(nome, ciclo){
   const impar = mentorImparDe(c);
   return (ciclo % 2 === 1) ? impar : outroMentor(impar);   // ímpares (1,3) = escolhido; pares (2,4) = o outro
 }
-/* reuniões realizadas / reuniões que já deveriam ter ocorrido no ciclo (1 por mês, só meses já passados) */
+/* reuniões realizadas / reuniões que já deveriam ter ocorrido no ciclo (2 por mês, só meses já passados) */
 function reunioesCicloStats(nome, ano, ciclo){
   let deveriam=0, realizadas=0;
   mesesDoCiclo(ciclo).forEach(m=>{
     const passou = (ano < CUR.ano) || (ano===CUR.ano && m <= CUR.mes);
     if(!passou) return;
-    deveriam++;
+    deveriam += 2;
     const rec = loadForm(nome, ano, m);
-    if(rec && rec.reuniao && rec.reuniao.status==='realizada') realizadas++;
+    [0,1].forEach(q=>{ if(rec && rec.reunioes && rec.reunioes[q] && rec.reunioes[q].status==='realizada') realizadas++; });
   });
   return { realizadas: realizadas, deveriam: deveriam };
 }
@@ -1453,12 +1475,15 @@ function saveForm(nome,ano,mes,rec){
   rec.updatedAt = Date.now();
   localStorage.setItem(keyOf(nome,ano,mes), JSON.stringify(rec));
 }
+function novaReuniaoVazia(){ return { status:null, data:"", hora:"" }; }
 function novoRegistro(nome,ano,mes){
   return { nome:nome, ano:ano, mes:mes, funcao:"", data:"", self:{}, ment:{},
     pdi:{ forcas:"", gaps:"", aspiracao:"", p70:"", p20:"", p10:"", compromissos:[], ancoras:[], kolb:[] },
-    reuniao:{ status:null, data:"", hora:"" },
+    reunioes:[ novaReuniaoVazia(), novaReuniaoVazia() ],
     updatedAt:0 };
 }
+/* reunioes[0] = Quinzenal 1, reunioes[1] = Quinzenal 2 */
+function reuniaoSlot(rec, q){ return (rec && rec.reunioes && rec.reunioes[q]) ? rec.reunioes[q] : novaReuniaoVazia(); }
 function allKeys(){
   const out=[];
   for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.indexOf(PREFIX)===0) out.push(k); }
@@ -1506,13 +1531,18 @@ function saveNotas(nome,ano,mes,rec){
   rec.updatedAt = Date.now();
   localStorage.setItem(keyNotas(nome,ano,mes), JSON.stringify(rec));
 }
-function novoNotas(nome,ano,mes){
-  return { nome:nome, ano:ano, mes:mes, abertura:"", retomada:"", realidade:"", caminhos:"",
-    c1acao:"", c1prazo:"", c2acao:"", c2prazo:"", livre:"", updatedAt:0 };
+/* cada mês tem 2 blocos independentes de anotação, um por quinzena (q1/q2) */
+function camposNotasVazios(){
+  return { abertura:"", retomada:"", realidade:"", caminhos:"", c1acao:"", c1prazo:"", c2acao:"", c2prazo:"", livre:"" };
 }
-function statusNotas(rec){
+function novoNotas(nome,ano,mes){
+  return { nome:nome, ano:ano, mes:mes, q1:camposNotasVazios(), q2:camposNotasVazios(), updatedAt:0 };
+}
+/* status de uma quinzena específica ("q1" ou "q2"); sem argumento, considera o mês inteiro (alguma das duas) */
+function statusNotas(rec, q){
   if(!rec) return "vazio";
-  const tem = rec.abertura||rec.retomada||rec.realidade||rec.caminhos||rec.livre||rec.c1acao||rec.c2acao;
+  const alvos = q ? [rec[q]] : [rec.q1, rec.q2];
+  const tem = alvos.some(c => c && (c.abertura||c.retomada||c.realidade||c.caminhos||c.livre||c.c1acao||c.c2acao));
   return tem ? "escrito" : "vazio";
 }
 
@@ -1597,34 +1627,46 @@ function mesRepresentanteDoCiclo(ciclo){ return mesesDoCiclo(ciclo)[0]; }
 ========================================================== */
 function reuniaoStatsColab(nome){
   const forms = formsDe(nome);
-  // "agendada" ainda não aconteceu, não entra na conta de % realizadas
-  const comData = forms.filter(f=>f.rec && f.rec.reuniao && (f.rec.reuniao.status==='realizada' || f.rec.reuniao.status==='nao_houve'));
-  const realizadas = comData.filter(f=>f.rec.reuniao.status==='realizada').length;
-  return { realizadas: realizadas, total: comData.length };
+  let total=0, realizadas=0;
+  forms.forEach(f=>{
+    [0,1].forEach(q=>{
+      const r = f.rec && f.rec.reunioes && f.rec.reunioes[q];
+      // "agendada" ainda não aconteceu, não entra na conta de % realizadas
+      if(!r || (r.status!=='realizada' && r.status!=='nao_houve')) return;
+      total++; if(r.status==='realizada') realizadas++;
+    });
+  });
+  return { realizadas: realizadas, total: total };
 }
 function reuniaoStatsMentor(mentor){
   let total=0, realizadas=0;
   allKeys().forEach(k=>{
     const rec = JSON.parse(localStorage.getItem(k));
-    if(!(rec && rec.nome && rec.mes && rec.reuniao && rec.reuniao.status)) return;
-    if(rec.reuniao.status!=='realizada' && rec.reuniao.status!=='nao_houve') return;
-    // o mentor da reunião é o do ciclo daquele mês, definido pelo sorteio/config
-    if(mentorDoCiclo(rec.nome, cicloDe(rec.mes))===mentor){
-      total++; if(rec.reuniao.status==='realizada') realizadas++;
-    }
+    if(!(rec && rec.nome && rec.mes && rec.reunioes)) return;
+    if(mentorDoCiclo(rec.nome, cicloDe(rec.mes))!==mentor) return;
+    [0,1].forEach(q=>{
+      const r = rec.reunioes[q];
+      if(!r || (r.status!=='realizada' && r.status!=='nao_houve')) return;
+      total++; if(r.status==='realizada') realizadas++;
+    });
   });
   return { realizadas: realizadas, total: total };
 }
-/* próxima reunião agendada (ou realizada no futuro) de um colaborador, a partir de hoje */
+/* próxima reunião agendada (ou realizada no futuro) de um colaborador, a partir de hoje, entre as 2 quinzenas de cada mês */
 function proximaReuniao(nome){
   const forms = formsDe(nome);
-  const candidatos = forms
-    .filter(f=>f.rec && f.rec.reuniao && f.rec.reuniao.data && f.rec.reuniao.status!=='nao_houve')
-    .map(f=>({data:f.rec.reuniao.data, hora:f.rec.reuniao.hora||""}))
-    .filter(c=>c.data >= isoHoje());
-  if(!candidatos.length) return null;
-  candidatos.sort((a,b)=> (a.data+a.hora).localeCompare(b.data+b.hora));
-  return candidatos[0];
+  const candidatos = [];
+  forms.forEach(f=>{
+    [0,1].forEach(q=>{
+      const r = f.rec && f.rec.reunioes && f.rec.reunioes[q];
+      if(!r || !r.data || r.status==='nao_houve') return;
+      candidatos.push({data:r.data, hora:r.hora||"", q:q});
+    });
+  });
+  const futuros = candidatos.filter(c=>c.data >= isoHoje());
+  if(!futuros.length) return null;
+  futuros.sort((a,b)=> (a.data+a.hora).localeCompare(b.data+b.hora));
+  return futuros[0];
 }
 function isoHoje(){
   return CUR.ano+"-"+String(new Date().getMonth()+1).padStart(2,"0")+"-"+String(new Date().getDate()).padStart(2,"0");
@@ -1776,7 +1818,7 @@ function renderCards(){
     const rsTxt = rsPct===null ? "Sem reuniões registradas" : rsPct+"% de reuniões realizadas";
     const rsCls = rsPct===null ? "" : (rsPct>=80?"ok":"low");
     const prox = proximaReuniao(nome);
-    const proxTxt = prox ? (diaSemanaCurta(prox.data)+" · "+formatarDataCurta(prox.data)+(prox.hora?" · "+prox.hora:"")) : "Não agendada";
+    const proxTxt = prox ? (diaSemanaCurta(prox.data)+" · "+formatarDataCurta(prox.data)+(prox.hora?" · "+prox.hora:"")+" · Quinzenal "+(prox.q+1)) : "Não agendada";
     const card = document.createElement("button");
     card.className = "fcard";
     card.onclick = ()=>abrirHub(nome);
@@ -1828,6 +1870,21 @@ function colaboradoresDoMentorNoCiclo(mentor, ciclo){
   nomesComForms().forEach(n=>nomesSet.add(n));
   return [...nomesSet].filter(n=>mentorDoCiclo(n,ciclo)===mentor).sort((a,b)=>a.localeCompare(b));
 }
+/* uma "quinzena" clicável dentro da linha de um colaborador (Quinzenal 1 = q0, Quinzenal 2 = q1) */
+function meetSlotHtml(nome, ano, mes, q, reun){
+  const onclick = "onclick=\"abrirModalReuniao("+ano+","+mes+",'"+esc(nome)+"',"+q+")\"";
+  if(reun && reun.status==='nao_houve'){
+    return '<div class="meet-slot skip" '+onclick+'>'
+      + '<span class="mr-day">—</span><span class="mr-date">Não houve</span><span class="mr-time">—</span></div>';
+  }
+  if(reun && reun.data){
+    const conflito = reuniaoConflito(CAL_MENTOR, reun.data, reun.hora, nome);
+    return '<div class="meet-slot'+(conflito?" conflict":"")+'" '+onclick+' title="'+(conflito?"Conflita com "+esc(conflito.nome)+" às "+conflito.hora:"")+'">'
+      + '<span class="mr-day">'+diaSemanaCurta(reun.data)+'</span><span class="mr-date">'+formatarDataCurta(reun.data)+'</span><span class="mr-time">'+esc(reun.hora||"—")+'</span></div>';
+  }
+  return '<div class="meet-slot empty" '+onclick+'>'
+    + '<span class="mr-day">—</span><span class="mr-date">Definir</span><span class="mr-time">—</span></div>';
+}
 function renderCalendario(){
   document.getElementById("cal-mt-val").classList.toggle("active", CAL_MENTOR==="Val");
   document.getElementById("cal-mt-luiz").classList.toggle("active", CAL_MENTOR==="Luiz");
@@ -1843,38 +1900,23 @@ function renderCalendario(){
     let body = "";
     if(!nomes.length){
       body = '<div class="empty-note" style="margin-top:14px;font-size:.86rem">Nenhum mentorado neste ciclo.</div>';
+    } else {
+      body = '<div class="meet-subhead"><span></span><span>Quinzenal 1</span><span>Quinzenal 2</span></div>';
     }
     nomes.forEach(nome=>{
       const rec = loadForm(nome, CAL_ANO, m);
-      const reun = rec && rec.reuniao ? rec.reuniao : null;
-      const dataAttr = "data-nome=\""+esc(nome)+"\"";
-      if(reun && reun.status==='nao_houve'){
-        body += '<div class="meet-rect skip" '+dataAttr+' onclick="abrirModalReuniao('+CAL_ANO+','+m+',\''+esc(nome)+'\')">'
-          + '<div class="mr-name">'+esc(nome)+'</div>'
-          + '<div class="mr-daydate"><span class="mr-day">—</span><span class="mr-date">Não houve</span></div>'
-          + '<div class="mr-time">—</div>'
-          + '</div>';
-      } else if(reun && reun.data){
-        const conflito = reuniaoConflito(CAL_MENTOR, reun.data, reun.hora, nome);
-        body += '<div class="meet-rect'+(conflito?" conflict":"")+'" '+dataAttr+' onclick="abrirModalReuniao('+CAL_ANO+','+m+',\''+esc(nome)+'\')" title="'+(conflito?"Conflita com "+esc(conflito.nome)+" às "+conflito.hora:"")+'">'
-          + '<div class="mr-name">'+esc(nome)+'</div>'
-          + '<div class="mr-daydate"><span class="mr-day">'+diaSemanaCurta(reun.data)+'</span><span class="mr-date">'+formatarDataCurta(reun.data)+'</span></div>'
-          + '<div class="mr-time">'+esc(reun.hora||"—")+'</div>'
-          + '</div>';
-      } else {
-        body += '<div class="meet-rect empty" '+dataAttr+' onclick="abrirModalReuniao('+CAL_ANO+','+m+',\''+esc(nome)+'\')">'
-          + '<div class="mr-name">'+esc(nome)+'</div>'
-          + '<div class="mr-daydate"><span class="mr-day">—</span><span class="mr-date">Definir</span></div>'
-          + '<div class="mr-time">—</div>'
-          + '</div>';
-      }
+      body += '<div class="meet-row" data-nome="'+esc(nome)+'">'
+        + '<div class="mr-name">'+esc(nome)+'</div>'
+        + meetSlotHtml(nome, CAL_ANO, m, 0, reuniaoSlot(rec,0))
+        + meetSlotHtml(nome, CAL_ANO, m, 1, reuniaoSlot(rec,1))
+        + '</div>';
     });
     col.innerHTML = '<div class="month-head"><div class="mh-name">'+MESES[m-1]+'</div><div class="mh-year">'+CAL_ANO+'</div></div>'
       + '<div class="month-body">'+body+'</div>';
     grid.appendChild(col);
   });
   if(CAL_HIGHLIGHT){
-    const alvo = grid.querySelector('.meet-rect[data-nome="'+CSS.escape(CAL_HIGHLIGHT)+'"]');
+    const alvo = grid.querySelector('.meet-row[data-nome="'+CSS.escape(CAL_HIGHLIGHT)+'"]');
     if(alvo){
       alvo.scrollIntoView({behavior:"smooth", block:"center"});
       alvo.style.borderColor = "var(--lime)";
@@ -1889,11 +1931,13 @@ function exportarCalendarioPDF(){
   const linhas = [];
   getColaboradores().forEach(c=>{
     formsDe(c.nome).forEach(f=>{
-      const r = f.rec && f.rec.reuniao;
-      if(!r || !r.data || r.status==='nao_houve') return;
       const mentor = mentorDoCiclo(c.nome, cicloDe(f.mes));
       if(mentor !== CAL_MENTOR) return;
-      linhas.push({ nome:c.nome, mentor:mentor, data:r.data, hora:r.hora||"", status:r.status });
+      [0,1].forEach(q=>{
+        const r = f.rec && f.rec.reunioes && f.rec.reunioes[q];
+        if(!r || !r.data || r.status==='nao_houve') return;
+        linhas.push({ nome:c.nome, mentor:mentor, quinzena:q+1, data:r.data, hora:r.hora||"", status:r.status });
+      });
     });
   });
   linhas.sort((a,b)=> a.nome.localeCompare(b.nome) || a.data.localeCompare(b.data));
@@ -1902,14 +1946,14 @@ function exportarCalendarioPDF(){
     root.innerHTML = '<h2>Calendário de reuniões · '+esc(CAL_MENTOR)+'</h2><p>Nenhuma reunião com data definida para este mentor ainda.</p>';
   } else {
     let rows = linhas.map(l=>
-      '<tr><td>'+esc(l.nome)+'</td><td>'+esc(l.mentor)+'</td>'
+      '<tr><td>'+esc(l.nome)+'</td><td>'+esc(l.mentor)+'</td><td>Quinzenal '+l.quinzena+'</td>'
       + '<td>'+diaSemanaCurta(l.data)+' · '+formatarDataCurta(l.data)+'/'+l.data.slice(0,4)+'</td>'
       + '<td>'+esc(l.hora||"—")+'</td>'
       + '<td>'+(l.status==='realizada'?"Realizada":"Agendada")+'</td></tr>'
     ).join("");
     root.innerHTML = '<h2>Calendário de reuniões · '+esc(CAL_MENTOR)+'</h2>'
       + '<p>'+linhas.length+' reunião(ões) com data definida, ordenadas por colaborador.</p>'
-      + '<table><thead><tr><th>Colaborador</th><th>Mentor</th><th>Data</th><th>Horário</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
+      + '<table><thead><tr><th>Colaborador</th><th>Mentor</th><th>Quinzena</th><th>Data</th><th>Horário</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
   document.body.classList.add("printing-calendar");
   window.print();
@@ -1951,58 +1995,61 @@ function renderHub(){
     meses.forEach(m=>{
       const isNow = (ANO_VISIVEL===CUR.ano && m===CUR.mes);
 
-      // status do mês: para o colaborador reflete as próprias anotações;
+      // status do mês: para o colaborador reflete as próprias anotações (por quinzena);
       // para o mentor é neutro, já que ele não acessa esse conteúdo.
-      let st, stTxt, mcMain;
+      let st, mcMain;
       if(ehGestor){
         st = "gestorview";
-        stTxt = "Uso do colaborador";
         mcMain = '<div class="mc-main">'
               +   '<span class="mc-m">'+MESES[m-1]+'</span>'
-              +   '<span class="mc-s"><i></i>'+stTxt+'</span>'
+              +   '<span class="mc-s"><i></i>Uso do colaborador</span>'
               + '</div>';
       } else {
         const notas = loadNotas(EDITING, ANO_VISIVEL, m);
-        const stn = statusNotas(notas);
-        st = stn==="escrito" ? "done" : "vazio";
-        stTxt = stn==="escrito" ? "Anotado" : "Sem anotação";
+        const st1 = statusNotas(notas, 'q1');
+        const st2 = statusNotas(notas, 'q2');
+        const ambas = (st1==="escrito" && st2==="escrito");
+        const alguma = (st1==="escrito" || st2==="escrito");
+        st = alguma ? "done" : "vazio";
+        const statusTxt = ambas ? "Anotado" : (alguma ? "Anotado parcialmente" : "Sem anotação");
+        // card inteiro clicável: abre as anotações do mês, a troca entre Q1/Q2 é feita lá dentro
         mcMain = '<button type="button" class="mc-main" onclick="abrirNotasMes('+ANO_VISIVEL+','+m+')">'
               +   '<span class="mc-m">'+MESES[m-1]+'</span>'
-              +   '<span class="mc-s"><i></i>'+stTxt+'</span>'
+              +   '<span class="mc-s"><i></i>'+statusTxt+'</span>'
               + '</button>';
       }
 
       const rec = loadForm(EDITING, ANO_VISIVEL, m); // só para a reunião (data/hora)
-      const reun = rec && rec.reuniao ? rec.reuniao : null;
-      // data/hora empilhadas (data em cima, horário embaixo)
-      let dtTop, dtBot, reunClass;
-      if(reun && reun.status==='realizada'){
-        const dCurta = formatarDataCurta(reun.data);
-        dtTop = dCurta ? dCurta : "Realizada";
-        dtBot = reun.hora ? reun.hora : "";
-        reunClass = "rc-done";
-      } else if(reun && reun.status==='nao_houve'){
-        dtTop = "—";
-        dtBot = "s/ reunião";
-        reunClass = "rc-skip";
-      } else if(reun && reun.status==='agendada' && reun.data){
-        const dCurta = formatarDataCurta(reun.data);
-        dtTop = dCurta ? dCurta : "Agendada";
-        dtBot = reun.hora ? reun.hora : "";
-        reunClass = "rc-agendada";
-      } else {
-        dtTop = "Definir";
-        dtBot = "reunião";
-        reunClass = "rc-empty";
-      }
-      const dtInner = '<span class="mc-dt-d">'+esc(dtTop)+'</span><span class="mc-dt-h">'+esc(dtBot)+'</span>';
-      const dtHtml = ROLE==="gestor"
-        ? '<button type="button" class="mc-dt '+reunClass+'" onclick="event.stopPropagation();abrirModalReuniao('+ANO_VISIVEL+','+m+')">'+dtInner+'</button>'
-        : (reun && reun.status ? '<div class="mc-dt '+reunClass+'">'+dtInner+'</div>' : '');
+      // data/hora empilhadas (data em cima, horário embaixo), uma vez por quinzena
+      const dtChips = [0,1].map(q=>{
+        const reun = reuniaoSlot(rec, q);
+        let label, reunClass;
+        const qLabel = "Q"+(q+1);
+        if(reun.status==='realizada'){
+          const dCurta = formatarDataCurta(reun.data);
+          label = (dCurta ? dCurta : "Realizada") + (reun.hora ? " "+reun.hora : "") + " · "+qLabel;
+          reunClass = "rc-done";
+        } else if(reun.status==='nao_houve'){
+          label = "Sem reunião · "+qLabel;
+          reunClass = "rc-skip";
+        } else if(reun.status==='agendada' && reun.data){
+          const dCurta = formatarDataCurta(reun.data);
+          label = (dCurta ? dCurta : "Agendada") + (reun.hora ? " "+reun.hora : "") + " · "+qLabel;
+          reunClass = "rc-agendada";
+        } else {
+          label = "Definir · "+qLabel;
+          reunClass = "rc-empty";
+        }
+        const dtInner = esc(label);
+        return ROLE==="gestor"
+          ? '<button type="button" class="mc-dtq '+reunClass+'" onclick="event.stopPropagation();abrirModalReuniao('+ANO_VISIVEL+','+m+',\'\','+q+')">'+dtInner+'</button>'
+          : (reun.status ? '<div class="mc-dtq '+reunClass+'">'+dtInner+'</div>' : '');
+      }).join("");
+      const dtHtml = '<div class="mc-dt2">'+dtChips+'</div>';
       cellsHtml += '<div class="month-cell mc-'+st+(isNow?" mc-current":"")+(ehGestor?" mc-locked":"")+'">'
             + mcMain
-            + '<div class="mc-num">'+String(m).padStart(2,'0')+'</div>'
             + dtHtml
+            + '<div class="mc-num">'+String(m).padStart(2,'0')+'</div>'
             + '</div>';
     });
 
@@ -2051,7 +2098,7 @@ function renderMentorBox(){
     +     '<div class="mentor-meet">'
     +       '<div class="mm-top"><span class="mm-pct">'+pctTxt+'</span><span class="mm-count">'+countTxt+'</span></div>'
     +       '<div class="mm-track"><div class="mm-fill" style="width:'+pct+'%"></div></div>'
-    +       '<div class="mm-cap">realizadas neste ciclo (1 por mês)</div>'
+    +       '<div class="mm-cap">realizadas neste ciclo (2 por mês)</div>'
     +     '</div>'
     +   '</div>'
     +   '<div class="mentor-photo"><img src="'+info.img+'" alt="'+esc(info.nome)+'"></div>'
@@ -2102,22 +2149,50 @@ function abrirAvaliacaoCiclo(ano,ciclo){
    ANOTAÇÕES MENSAIS (colaborador, privado)
 ========================================================== */
 let NOTA_PERIODO = null;
-function abrirNotasMes(ano,mes){
+let NOTA_Q = 1;   // 1 = Quinzenal 1, 2 = Quinzenal 2
+function abrirNotasMes(ano,mes,q){
   if(ROLE !== "colab") return; // travado para o mentor
   NOTA_PERIODO = { ano:ano, mes:mes };
-  const rec = loadNotas(EDITING,ano,mes) || novoNotas(EDITING,ano,mes);
-  set("nt_abertura", rec.abertura); set("nt_retomada", rec.retomada);
-  set("nt_realidade", rec.realidade); set("nt_caminhos", rec.caminhos);
-  set("nt_c1acao", rec.c1acao); set("nt_c1prazo", rec.c1prazo);
-  set("nt_c2acao", rec.c2acao); set("nt_c2prazo", rec.c2prazo);
-  set("nt_livre", rec.livre);
+  NOTA_Q = q || 1;
   document.getElementById("nt-cycle").textContent = "Ciclo " + cicloDe(mes);
   document.getElementById("nt-month").textContent = MESES[mes-1] + " de " + ano;
+  carregarNotasQuinzena();
+  showScreen("notas");
+}
+/* troca de aba: salva o que já estava na tela antes de trocar, pra não perder nada */
+function selecionarQuinzenaNotas(q){
+  if(q === NOTA_Q) return;
+  salvarNotas();
+  NOTA_Q = q;
+  carregarNotasQuinzena();
+}
+function carregarNotasQuinzena(){
+  const {ano,mes} = NOTA_PERIODO;
+  const rec = loadNotas(EDITING,ano,mes) || novoNotas(EDITING,ano,mes);
+  const c = rec["q"+NOTA_Q];
+  set("nt_abertura", c.abertura); set("nt_retomada", c.retomada);
+  set("nt_realidade", c.realidade); set("nt_caminhos", c.caminhos);
+  set("nt_c1acao", c.c1acao); set("nt_c1prazo", c.c1prazo);
+  set("nt_c2acao", c.c2acao); set("nt_c2prazo", c.c2prazo);
+  set("nt_livre", c.livre);
+  document.getElementById("nt-q1-btn").classList.toggle("active", NOTA_Q===1);
+  document.getElementById("nt-q2-btn").classList.toggle("active", NOTA_Q===2);
   document.getElementById("nt-save-status").textContent = rec.updatedAt
     ? "Última gravação: " + new Date(rec.updatedAt).toLocaleString("pt-BR")
     : "Suas anotações ficam salvas automaticamente e te acompanham em qualquer computador.";
-  showScreen("notas");
+  atualizarLabelReuniaoNotas();
   NOTAS_DIRTY_SNAPSHOT = snapshotNotas();
+}
+/* mostra a data/hora que o mentor definiu pra essa quinzena, pra ligar a anotação ao encontro real */
+function atualizarLabelReuniaoNotas(){
+  const el = document.getElementById("nt-q-meet");
+  if(!el || !NOTA_PERIODO) return;
+  const {ano,mes} = NOTA_PERIODO;
+  const formRec = loadForm(EDITING,ano,mes);
+  const r = reuniaoSlot(formRec, NOTA_Q-1);
+  el.textContent = r.data
+    ? "Reunião marcada: "+diaSemanaCurta(r.data)+" "+formatarDataCurta(r.data)+(r.hora?" às "+r.hora:"")
+    : "O mentor ainda não definiu a data desta reunião.";
 }
 let NOTAS_SALVAR_TIMEOUT = null;
 function agendarSalvarNotas(){
@@ -2129,11 +2204,12 @@ function salvarNotas(){
   const {ano,mes} = NOTA_PERIODO;
   const rec = loadNotas(EDITING,ano,mes) || novoNotas(EDITING,ano,mes);
   rec.nome = EDITING; rec.ano = ano; rec.mes = mes;
-  rec.abertura = val("nt_abertura"); rec.retomada = val("nt_retomada");
-  rec.realidade = val("nt_realidade"); rec.caminhos = val("nt_caminhos");
-  rec.c1acao = val("nt_c1acao"); rec.c1prazo = val("nt_c1prazo");
-  rec.c2acao = val("nt_c2acao"); rec.c2prazo = val("nt_c2prazo");
-  rec.livre = val("nt_livre");
+  const c = rec["q"+NOTA_Q];
+  c.abertura = val("nt_abertura"); c.retomada = val("nt_retomada");
+  c.realidade = val("nt_realidade"); c.caminhos = val("nt_caminhos");
+  c.c1acao = val("nt_c1acao"); c.c1prazo = val("nt_c1prazo");
+  c.c2acao = val("nt_c2acao"); c.c2prazo = val("nt_c2prazo");
+  c.livre = val("nt_livre");
   saveNotas(EDITING,ano,mes,rec);
   document.getElementById("nt-save-status").textContent = "Última gravação: " + new Date(rec.updatedAt).toLocaleString("pt-BR");
   NOTAS_DIRTY_SNAPSHOT = snapshotNotas();
@@ -2142,6 +2218,7 @@ function salvarNotas(){
 /* ---- "foto" das anotações, pra detectar alterações não salvas ---- */
 function snapshotNotas(){
   return JSON.stringify({
+    q: NOTA_Q,
     abertura: val("nt_abertura"), retomada: val("nt_retomada"),
     realidade: val("nt_realidade"), caminhos: val("nt_caminhos"),
     c1acao: val("nt_c1acao"), c1prazo: val("nt_c1prazo"),
@@ -2429,18 +2506,19 @@ function saveAndLeave(){
    antecedência: tem data/hora mas ainda não conta nas estatísticas
    de % de reuniões (só "Realizada" e "Não houve" contam).
 ========================================================== */
-function abrirModalReuniao(ano, mes, nomeParam){
+function abrirModalReuniao(ano, mes, nomeParam, q){
   const nome = nomeParam || EDITING;
+  const qi = q || 0;
   const mentor = nomeParam ? CAL_MENTOR : mentorDoCiclo(nome, cicloDe(mes));
-  MODAL_CTX = { ano:ano, mes:mes, nome:nome, mentor:mentor, origin: nomeParam ? "calendar" : "hub" };
+  MODAL_CTX = { ano:ano, mes:mes, nome:nome, mentor:mentor, q:qi, origin: nomeParam ? "calendar" : "hub" };
   const rec = loadForm(nome,ano,mes) || novoRegistro(nome,ano,mes);
-  const r = rec.reuniao || { status:null, data:"", hora:"" };
+  const r = reuniaoSlot(rec, qi);
   const statusAtual = r.status || "agendada";
   const subLinha = nomeParam
     ? ('Mentor: <b style="color:var(--white)">'+esc(mentor)+'</b> · '+MESES[mes-1]+' de '+ano)
     : (MESES[mes-1]+' de '+ano+' · Ciclo '+cicloDe(mes));
   const html =
-    '<div class="modal-head">Reunião · '+esc(nome)+'</div>'
+    '<div class="modal-head">Reunião · '+esc(nome)+' · Quinzenal '+(qi+1)+'</div>'
     + '<div class="modal-sub">'+subLinha+'</div>'
     + '<div class="meet-toggle meet-toggle3">'
     +   '<button type="button" class="mt-btn'+(statusAtual==='agendada'?' active':'')+'" id="mt-agendada" onclick="toggleReuniaoStatus(\'agendada\')">Agendada</button>'
@@ -2472,11 +2550,12 @@ function toggleReuniaoStatus(s){
 }
 function salvarReuniao(){
   if(!MODAL_CTX) return;
-  const {ano, mes, nome, origin} = MODAL_CTX;
+  const {ano, mes, nome, q, origin} = MODAL_CTX;
   const rec = loadForm(nome,ano,mes) || novoRegistro(nome,ano,mes);
+  if(!rec.reunioes) rec.reunioes = [ novaReuniaoVazia(), novaReuniaoVazia() ];
   const status = window._mtStatus || "agendada";
   rec.nome = nome; rec.ano = ano; rec.mes = mes;
-  rec.reuniao = {
+  rec.reunioes[q] = {
     status: status,
     data: status==="nao_houve" ? "" : val("mt-data"),
     hora: status==="nao_houve" ? "" : val("mt-hora")
@@ -2499,12 +2578,15 @@ function reuniaoConflito(mentor, data, hora, excluirNome){
   getColaboradores().forEach(c=>{
     if(achado || c.nome===excluirNome) return;
     formsDe(c.nome).forEach(f=>{
-      if(achado || !f.rec || !f.rec.reuniao) return;
-      const r = f.rec.reuniao;
-      if(!r.data || !r.hora || r.status==='nao_houve') return;
+      if(achado || !f.rec || !f.rec.reunioes) return;
+      [0,1].forEach(q=>{
+      if(achado) return;
+      const r = f.rec.reunioes[q];
+      if(!r || !r.data || !r.hora || r.status==='nao_houve') return;
       if(r.data !== data) return;
       if(mentorDoCiclo(c.nome, cicloDe(f.mes)) !== mentor) return;
       if(Math.abs(minutosDe(r.hora) - minutosDe(hora)) < 60) achado = {nome:c.nome, hora:r.hora};
+      });
     });
   });
   return achado;

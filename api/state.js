@@ -7,7 +7,7 @@
 //
 // MERGE POR CAMPO nos registros afinar_v4::<nome>::<ano>-<mes>:
 //   os campos do colaborador (funcao/data/self/pdi/selfCompleto) e os do gestor
-//   (ment/mentor/roteiro/reuniao/mentCompleto) são mesclados usando as marcas de
+//   (ment/mentor/roteiro/reunioes/mentCompleto) são mesclados usando as marcas de
 //   tempo selfUpdatedAt / mentUpdatedAt, para que salvar de um lado nunca apague
 //   o que o outro lado gravou no mesmo mês.
 
@@ -36,7 +36,7 @@ async function readState(){
 
 const isRecordKey = k => k.indexOf('afinar_v4::') === 0;
 const COLAB_FIELDS = ['funcao','data','self','pdi','selfCompleto'];
-const GEST_FIELDS  = ['ment','mentor','roteiro','reuniao','mentCompleto'];
+const GEST_FIELDS  = ['ment','mentor','roteiro','reunioes','mentCompleto'];
 
 // serializa um objeto com as chaves de topo ordenadas (saída determinística,
 // para o guard de no-op detectar valores idênticos)
