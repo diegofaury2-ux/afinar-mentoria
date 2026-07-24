@@ -182,6 +182,12 @@
   .field input[type=date]::-webkit-calendar-picker-indicator,.field input[type=time]::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:auto;height:auto;margin:0;padding:0;opacity:0;cursor:pointer}
   .field textarea{resize:vertical;min-height:70px;line-height:1.5}
   input:read-only,textarea:read-only{opacity:.72;cursor:default}
+  .senha-wrap{position:relative;display:block}
+  .senha-wrap input{width:100%;box-sizing:border-box;padding-right:44px}
+  .senha-eye{position:absolute;top:50%;right:6px;transform:translateY(-50%);height:34px;width:34px;display:flex;align-items:center;justify-content:center;background:none;border:none;padding:0;margin:0;cursor:pointer;color:var(--grey);border-radius:6px}
+  .senha-eye:hover{color:var(--lime)}
+  .senha-eye:focus-visible{outline:2px solid var(--lime)}
+  .senha-eye svg{width:20px;height:20px;display:block}
   select:disabled{opacity:.72;cursor:default}
   .lock-tag{display:inline-block;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--grey);border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin-left:10px;vertical-align:middle}
 
@@ -670,13 +676,19 @@
       </div>
       <div class="field" id="campo-colab-senha" hidden>
         <label id="lbl-colab-senha">Senha</label>
-        <input type="password" id="in-colab-senha" placeholder="Digite sua senha" autocomplete="off"
-               onkeydown="if(event.key==='Enter')entrarColab()">
+        <div class="senha-wrap">
+          <input type="password" id="in-colab-senha" placeholder="Digite sua senha" autocomplete="off"
+                 onkeydown="if(event.key==='Enter')entrarColab()">
+          <button type="button" class="senha-eye" aria-label="Mostrar senha" onclick="toggleSenha(this)"></button>
+        </div>
       </div>
       <div class="field" id="campo-colab-senha-confirma" hidden>
         <label>Confirme a senha</label>
-        <input type="password" id="in-colab-senha-confirma" placeholder="Digite a senha novamente" autocomplete="off"
-               onkeydown="if(event.key==='Enter')entrarColab()">
+        <div class="senha-wrap">
+          <input type="password" id="in-colab-senha-confirma" placeholder="Digite a senha novamente" autocomplete="off"
+                 onkeydown="if(event.key==='Enter')entrarColab()">
+          <button type="button" class="senha-eye" aria-label="Mostrar senha" onclick="toggleSenha(this)"></button>
+        </div>
       </div>
       <div class="login-error" id="err-colab"></div>
       <button class="btn btn-primary" style="width:100%;margin-top:8px" id="btn-colab" onclick="entrarColab()">Continuar</button>
@@ -686,8 +698,11 @@
     <div class="login-panel" id="panel-gestor" hidden>
       <div class="field">
         <label>Senha de gestor</label>
-        <input type="password" id="in-gestor-senha" placeholder="Digite a senha" autocomplete="off"
-               onkeydown="if(event.key==='Enter')entrarGestor()">
+        <div class="senha-wrap">
+          <input type="password" id="in-gestor-senha" placeholder="Digite a senha" autocomplete="off"
+                 onkeydown="if(event.key==='Enter')entrarGestor()">
+          <button type="button" class="senha-eye" aria-label="Mostrar senha" onclick="toggleSenha(this)"></button>
+        </div>
       </div>
       <div class="login-error" id="err-gestor"></div>
       <button class="btn btn-primary" id="btn-gestor" style="width:100%;margin-top:8px" onclick="entrarGestor()">Entrar</button>
@@ -1708,6 +1723,26 @@ const HOJE = new Date();
 const CUR = { ano: HOJE.getFullYear(), mes: HOJE.getMonth()+1 };
 
 /* =========================================================
+   MOSTRAR/OCULTAR SENHA (ícone de olho)
+========================================================== */
+const SVG_OLHO = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5"/></svg>';
+const SVG_OLHO_CORTADO = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.83 9L15 12.16V12a3 3 0 0 0-3-3zm-4.3.8l1.55 1.55c-.05.21-.08.42-.08.65a3 3 0 0 0 3 3c.22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53a5 5 0 0 1-5-5c0-.79.2-1.53.53-2.2M2 4.27l2.28 2.28.45.45C3.08 8.3 1.78 10 1 12c1.73 4.39 6 7.5 11 7.5c1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22L21 20.73L3.27 3M12 7a5 5 0 0 1 5 5c0 .64-.13 1.26-.36 1.82l2.93 2.93c1.5-1.25 2.7-2.89 3.43-4.75c-1.73-4.39-6-7.5-11-7.5c-1.4 0-2.74.25-4 .7l2.17 2.15C10.74 7.13 11.35 7 12 7"/></svg>';
+// preenche o ícone inicial (olho) em qualquer botão de olho ainda vazio
+function initEyes(){
+  document.querySelectorAll(".senha-eye").forEach(btn=>{ if(!btn.innerHTML.trim()) btn.innerHTML = SVG_OLHO; });
+}
+// alterna o input irmão entre password (asteriscos) e text (visível), trocando o ícone
+function toggleSenha(btn){
+  const input = btn.parentElement.querySelector("input");
+  if(!input) return;
+  const revelar = input.type === "password";
+  input.type = revelar ? "text" : "password";
+  btn.innerHTML = revelar ? SVG_OLHO_CORTADO : SVG_OLHO;
+  btn.setAttribute("aria-label", revelar ? "Ocultar senha" : "Mostrar senha");
+  input.focus();
+}
+
+/* =========================================================
    LOGIN
 ========================================================== */
 function selRole(r){
@@ -1737,6 +1772,16 @@ function resetLoginColabState(){
   const inConfirma = document.getElementById("in-colab-senha-confirma");
   if(inSenha) inSenha.value = "";
   if(inConfirma) inConfirma.value = "";
+  ocultarSenha("in-colab-senha"); ocultarSenha("in-colab-senha-confirma");
+}
+// volta o campo para asteriscos e o ícone para "olho" (estado padrão)
+function ocultarSenha(inputId){
+  const input = document.getElementById(inputId);
+  if(!input) return;
+  input.type = "password";
+  const wrap = input.closest(".senha-wrap");
+  const btn = wrap && wrap.querySelector(".senha-eye");
+  if(btn){ btn.innerHTML = SVG_OLHO; btn.setAttribute("aria-label","Mostrar senha"); }
 }
 async function entrarColab(){
   const digitado = document.getElementById("in-colab-nome").value.trim();
@@ -1854,6 +1899,7 @@ function logout(){
     ROLE = EDITING = PERIODO = null;
     document.getElementById("in-colab-nome").value = "";
     document.getElementById("in-gestor-senha").value = "";
+    ocultarSenha("in-gestor-senha");
     resetLoginColabState();
     showScreen("login");
   });
@@ -2539,6 +2585,7 @@ function setupJumpEval(){
 ========================================================== */
 function openModal(html){
   document.getElementById("modal-box").innerHTML = html;
+  initEyes();
   document.getElementById("modal-overlay").hidden = false;
 }
 function closeModal(){
@@ -2564,7 +2611,8 @@ function resetarSenhaColab(nome){
   const html = '<div class="modal-head">Resetar senha de '+esc(nome)+'</div>'
     + '<div class="modal-sub">Confirme a senha de gestor para apagar a senha atual. No próximo acesso, essa pessoa vai criar uma senha nova.</div>'
     + '<div class="field"><label>Senha de gestor</label>'
-    + '<input type="password" id="in-reset-senha-gestor" autocomplete="off" onkeydown="if(event.key===\'Enter\')confirmarResetSenhaColab()"></div>'
+    + '<div class="senha-wrap"><input type="password" id="in-reset-senha-gestor" autocomplete="off" onkeydown="if(event.key===\'Enter\')confirmarResetSenhaColab()">'
+    + '<button type="button" class="senha-eye" aria-label="Mostrar senha" onclick="toggleSenha(this)"></button></div></div>'
     + '<div class="login-error" id="err-reset-senha"></div>'
     + '<div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>'
     + '<button class="btn btn-danger" id="btn-reset-senha-ok" onclick="confirmarResetSenhaColab()">Resetar senha</button></div>';
@@ -3039,6 +3087,7 @@ function bootAfinar(){
   montarAncoras();
   montarKolb();
   refreshColabDatalist();
+  initEyes();
   showScreen("login");
 }
 
