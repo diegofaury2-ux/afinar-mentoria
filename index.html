@@ -665,11 +665,21 @@
       <div class="field">
         <label>Seu nome</label>
         <input type="text" id="in-colab-nome" list="lista-colabs" placeholder="Digite ou escolha seu nome" autocomplete="off"
-               onkeydown="if(event.key==='Enter')entrarColab()">
+               oninput="onNomeColabChange()" onkeydown="if(event.key==='Enter')entrarColab()">
         <datalist id="lista-colabs"></datalist>
       </div>
+      <div class="field" id="campo-colab-senha" hidden>
+        <label id="lbl-colab-senha">Senha</label>
+        <input type="password" id="in-colab-senha" placeholder="Digite sua senha" autocomplete="off"
+               onkeydown="if(event.key==='Enter')entrarColab()">
+      </div>
+      <div class="field" id="campo-colab-senha-confirma" hidden>
+        <label>Confirme a senha</label>
+        <input type="password" id="in-colab-senha-confirma" placeholder="Digite a senha novamente" autocomplete="off"
+               onkeydown="if(event.key==='Enter')entrarColab()">
+      </div>
       <div class="login-error" id="err-colab"></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="entrarColab()">Acessar meu perfil</button>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" id="btn-colab" onclick="entrarColab()">Continuar</button>
       <a class="btn btn-danger" style="width:100%;margin-top:10px;display:block;text-align:center;text-decoration:none;box-sizing:border-box" href="aviso-afinar.html" target="_blank" rel="noopener">Objetivos do programa</a>
     </div>
 
@@ -1684,6 +1694,9 @@ function diaSemanaCurta(iso){
 let ROLE = null;
 let EDITING = null;
 let PERIODO = null;
+let LOGIN_COLAB_SENHA_VISIVEL = false;
+let LOGIN_COLAB_PRECISA_CRIAR = false;
+let RESET_SENHA_NOME = null;
 let ANO_VISIVEL = ANO_PADRAO;
 let FILTRO = "todos";
 let MODAL_CTX = null;
@@ -1704,11 +1717,31 @@ function selRole(r){
   document.getElementById("panel-gestor").hidden = (r!=="gestor");
   document.getElementById("err-colab").textContent = "";
   document.getElementById("err-gestor").textContent = "";
+  resetLoginColabState();
   setTimeout(()=>{ document.getElementById(r==="colab"?"in-colab-nome":"in-gestor-senha").focus(); },50);
 }
-function entrarColab(){
+// se o nome for editado depois que o campo de senha já apareceu, volta pro passo 1
+function onNomeColabChange(){
+  if(LOGIN_COLAB_SENHA_VISIVEL) resetLoginColabState();
+}
+function resetLoginColabState(){
+  LOGIN_COLAB_SENHA_VISIVEL = false;
+  LOGIN_COLAB_PRECISA_CRIAR = false;
+  const campoSenha = document.getElementById("campo-colab-senha");
+  const campoConfirma = document.getElementById("campo-colab-senha-confirma");
+  const btn = document.getElementById("btn-colab");
+  if(campoSenha) campoSenha.hidden = true;
+  if(campoConfirma) campoConfirma.hidden = true;
+  if(btn) btn.textContent = "Continuar";
+  const inSenha = document.getElementById("in-colab-senha");
+  const inConfirma = document.getElementById("in-colab-senha-confirma");
+  if(inSenha) inSenha.value = "";
+  if(inConfirma) inConfirma.value = "";
+}
+async function entrarColab(){
   const digitado = document.getElementById("in-colab-nome").value.trim();
   const err = document.getElementById("err-colab");
+  const btn = document.getElementById("btn-colab");
   if(!digitado){ err.textContent = "Selecione o seu nome na lista para continuar."; return; }
   // só é possível entrar com um dos nomes JÁ cadastrados (evita colaborador fantasma).
   // o campo de texto serve só para achar o próprio nome; a seleção é obrigatória.
@@ -1717,7 +1750,67 @@ function entrarColab(){
     err.textContent = "Nome não encontrado. Selecione um dos nomes da lista.";
     return;
   }
+
+  // passo 1: ainda não perguntamos a senha -> descobre no servidor se esse nome já tem uma
+  if(!LOGIN_COLAB_SENHA_VISIVEL){
+    err.textContent = "Verificando…";
+    if(btn) btn.disabled = true;
+    let status;
+    try{
+      const r = await fetch("/api/colab-auth", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ nome: match.nome, acao:"status" })
+      });
+      status = await r.json();
+    }catch(e){
+      if(btn) btn.disabled = false;
+      err.textContent = "Falha de conexão. Tente novamente.";
+      return;
+    }
+    if(btn) btn.disabled = false;
+    err.textContent = "";
+    LOGIN_COLAB_SENHA_VISIVEL = true;
+    LOGIN_COLAB_PRECISA_CRIAR = !(status && status.hasPassword);
+    document.getElementById("campo-colab-senha").hidden = false;
+    document.getElementById("campo-colab-senha-confirma").hidden = !LOGIN_COLAB_PRECISA_CRIAR;
+    document.getElementById("lbl-colab-senha").textContent = LOGIN_COLAB_PRECISA_CRIAR ? "Crie uma senha" : "Senha";
+    document.getElementById("in-colab-senha").placeholder = LOGIN_COLAB_PRECISA_CRIAR ? "Crie sua senha (mín. 4 caracteres)" : "Digite sua senha";
+    btn.textContent = LOGIN_COLAB_PRECISA_CRIAR ? "Criar senha e entrar" : "Entrar";
+    setTimeout(()=>{ document.getElementById("in-colab-senha").focus(); },50);
+    return;
+  }
+
+  // passo 2: campo de senha já visível -> cria (primeiro acesso) ou valida (acessos seguintes)
+  const senha = document.getElementById("in-colab-senha").value;
+  if(!senha){ err.textContent = "Digite a senha."; return; }
+  if(LOGIN_COLAB_PRECISA_CRIAR){
+    const confirma = document.getElementById("in-colab-senha-confirma").value;
+    if(senha.length < 4){ err.textContent = "A senha precisa ter pelo menos 4 caracteres."; return; }
+    if(senha !== confirma){ err.textContent = "As senhas não coincidem."; return; }
+  }
+
+  err.textContent = "Verificando…";
+  if(btn) btn.disabled = true;
+  let resp;
+  try{
+    const r = await fetch("/api/colab-auth", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ nome: match.nome, acao: LOGIN_COLAB_PRECISA_CRIAR ? "set" : "verify", senha: senha })
+    });
+    resp = await r.json();
+  }catch(e){
+    if(btn) btn.disabled = false;
+    err.textContent = "Falha de conexão. Tente novamente.";
+    return;
+  }
+  if(btn) btn.disabled = false;
+  if(!resp || !resp.ok){
+    err.textContent = LOGIN_COLAB_PRECISA_CRIAR ? "Não foi possível criar a senha. Tente novamente." : "Senha incorreta.";
+    return;
+  }
+
   err.textContent = "";
+  resetLoginColabState();
   ROLE = "colab"; EDITING = match.nome; ANO_VISIVEL = ANO_PADRAO;   // usa o nome canônico cadastrado
   document.getElementById("hub-voltar").hidden = true;
   renderHub();
@@ -1761,6 +1854,7 @@ function logout(){
     ROLE = EDITING = PERIODO = null;
     document.getElementById("in-colab-nome").value = "";
     document.getElementById("in-gestor-senha").value = "";
+    resetLoginColabState();
     showScreen("login");
   });
 }
@@ -2450,7 +2544,7 @@ function openModal(html){
 function closeModal(){
   document.getElementById("modal-overlay").hidden = true;
   document.getElementById("modal-box").innerHTML = "";
-  MODAL_CTX = null; CONFIRM_ACTION = null; PENDING_LEAVE_ACTION = null;
+  MODAL_CTX = null; CONFIRM_ACTION = null; PENDING_LEAVE_ACTION = null; RESET_SENHA_NOME = null;
 }
 function confirmModal(titulo, msg, onOk, okLabel){
   CONFIRM_ACTION = onOk;
@@ -2461,6 +2555,51 @@ function confirmModal(titulo, msg, onOk, okLabel){
   openModal(html);
 }
 function runConfirm(){ const fn = CONFIRM_ACTION; closeModal(); if(fn) fn(); }
+
+/* =========================================================
+   RESET DE SENHA DE COLABORADOR (gestor)
+========================================================== */
+function resetarSenhaColab(nome){
+  RESET_SENHA_NOME = nome;
+  const html = '<div class="modal-head">Resetar senha de '+esc(nome)+'</div>'
+    + '<div class="modal-sub">Confirme a senha de gestor para apagar a senha atual. No próximo acesso, essa pessoa vai criar uma senha nova.</div>'
+    + '<div class="field"><label>Senha de gestor</label>'
+    + '<input type="password" id="in-reset-senha-gestor" autocomplete="off" onkeydown="if(event.key===\'Enter\')confirmarResetSenhaColab()"></div>'
+    + '<div class="login-error" id="err-reset-senha"></div>'
+    + '<div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>'
+    + '<button class="btn btn-danger" id="btn-reset-senha-ok" onclick="confirmarResetSenhaColab()">Resetar senha</button></div>';
+  openModal(html);
+  setTimeout(()=>{ const el=document.getElementById("in-reset-senha-gestor"); if(el) el.focus(); },50);
+}
+async function confirmarResetSenhaColab(){
+  const nome = RESET_SENHA_NOME;
+  const inp = document.getElementById("in-reset-senha-gestor");
+  const err = document.getElementById("err-reset-senha");
+  const btn = document.getElementById("btn-reset-senha-ok");
+  const senhaGestor = inp ? inp.value : "";
+  if(!senhaGestor){ err.textContent = "Digite a senha de gestor."; return; }
+  err.textContent = "Verificando…";
+  if(btn) btn.disabled = true;
+  let resp;
+  try{
+    const r = await fetch("/api/colab-auth", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ nome: nome, acao:"reset", senhaGestor: senhaGestor })
+    });
+    resp = await r.json();
+  }catch(e){
+    if(btn) btn.disabled = false;
+    err.textContent = "Falha de conexão. Tente novamente.";
+    return;
+  }
+  if(!resp || !resp.ok){
+    if(btn) btn.disabled = false;
+    err.textContent = "Senha de gestor incorreta.";
+    return;
+  }
+  closeModal();
+  toast("Senha de "+nome.split(' ')[0]+" resetada. No próximo acesso ela(e) cria uma senha nova.");
+}
 
 /* =========================================================
    GUARDA DE ALTERAÇÕES NÃO SALVAS
@@ -2655,10 +2794,13 @@ function renderSettings(){
     const btnEdit = document.createElement("button");
     btnEdit.className = "btn btn-ghost sm"; btnEdit.textContent = "Editar";
     btnEdit.onclick = ()=>iniciarEdicaoColab(row, colab);
+    const btnResetSenha = document.createElement("button");
+    btnResetSenha.className = "btn btn-ghost sm"; btnResetSenha.textContent = "Resetar senha";
+    btnResetSenha.onclick = ()=>resetarSenhaColab(colab.nome);
     const btnDel = document.createElement("button");
     btnDel.className = "btn btn-ghost sm danger"; btnDel.textContent = "Excluir";
     btnDel.onclick = ()=>pedirExclusaoColaborador(colab.nome);
-    actions.appendChild(btnEdit); actions.appendChild(btnDel);
+    actions.appendChild(btnEdit); actions.appendChild(btnResetSenha); actions.appendChild(btnDel);
     row.appendChild(nameDiv); row.appendChild(criarSeletorMentor(colab)); row.appendChild(actions);
     root.appendChild(row);
   });
