@@ -1071,8 +1071,8 @@
     <div id="colab-list"></div>
 
     <div style="margin-top:22px">
-      <button class="btn btn-ghost" onclick="sortearMentores()">🎲 Sortear mentores (7 e 7)</button>
-      <p class="save-hint" style="margin-top:8px">Distribui os colaboradores aleatoriamente entre Val e Luiz, 7 para cada nos ciclos ímpares (e o inverso nos pares). Feito para usar uma única vez.</p>
+      <button class="btn btn-ghost" onclick="sortearMentores()">🎲 Sortear mentores</button>
+      <p class="save-hint" style="margin-top:8px">Distribui os colaboradores aleatoriamente entre Val e Luiz, metade para cada nos ciclos ímpares (e o inverso nos pares). Em lista de tamanho ímpar, o Luiz fica com um a mais. Feito para usar uma única vez.</p>
     </div>
 
     <h3 style="margin-top:46px">Backup</h3>
@@ -1279,11 +1279,19 @@ const COLABORADORES_PADRAO = [
   {nome:"Oscar", cargo:"Designer"},
   {nome:"Vanderson", cargo:"Designer"},
   {nome:"Filipe", cargo:"Head de Performance"},
-  {nome:"Vicente", cargo:"Designer"}
+  {nome:"Vicente", cargo:"Designer"},
+  // mentorImpar fixo: sem ele a regra de alternância por posição (ver
+  // getColaboradores) cairia em "Val" pela posição 15 na lista, e a definição
+  // combinada para a Priscila é Luiz.
+  {nome:"Priscila", cargo:"Gestão de Relacionamento com Clientes", mentorImpar:"Luiz"}
 ];
 /* senha do gestor NÃO fica mais no client: validada em /api/gestor-login (env SYNC_PASSWORD) */
 const ANO_PADRAO = new Date().getFullYear();
 const COLAB_KEY = "afinar_v4_colaboradores";
+/* marca de migração já executada. Começa com afinar_v4 (logo é sincronizada e
+   entra no backup), mas NÃO com "afinar_v4::" — então fica de fora de allKeys()
+   e não é confundida com registro mensal por parseKey/nomesComForms. */
+const MIGR_PRISCILA_KEY = "afinar_v4_migr_priscila";
 const PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>';
 const CAL_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
 
@@ -1302,7 +1310,8 @@ const FOTOS = {
   "Vicente":     "vicente.png",
   "Renan":       "renan.png",
   "Alana":       "alana.png",
-  "João":        "joao.png"
+  "João":        "joao.png",
+  "Priscila":    "priscila.png"
 };
 function fotoHtml(nome){
   const src = FOTOS[nome];
@@ -2869,10 +2878,13 @@ function distribuirMentores(list, aleatorio){
   return list;
 }
 function sortearMentores(){
+  const total = getColaboradores().length;
+  const nVal = Math.floor(total/2);
+  const nLuiz = total - nVal;
   confirmModal(
     "Sortear mentores",
-    "Isso redistribui aleatoriamente os mentores de todos os colaboradores: 7 para Val e 7 para Luiz nos ciclos ímpares (e o inverso nos pares). A ideia é usar só uma vez e não repetir. Deseja continuar?",
-    ()=>{ const list=getColaboradores(); distribuirMentores(list, true); setColaboradores(list); renderSettings(); toast("Mentores sorteados: 7 para Val, 7 para Luiz"); },
+    "Isso redistribui aleatoriamente os mentores de todos os colaboradores: "+nVal+" para Val e "+nLuiz+" para Luiz nos ciclos ímpares (e o inverso nos pares). A ideia é usar só uma vez e não repetir. Deseja continuar?",
+    ()=>{ const list=getColaboradores(); distribuirMentores(list, true); setColaboradores(list); renderSettings(); toast("Mentores sorteados: "+nVal+" para Val, "+nLuiz+" para Luiz"); },
     "Sortear agora"
   );
 }
@@ -3079,6 +3091,31 @@ function migrarDados(){
     const l = getColaboradores();
     distribuirMentores(l, false);
     setColaboradores(l);
+  }
+  // ENTRADA DA PRISCILA (agosto/2026) — migração de execução única.
+  // Obrigatória: a lista fica em afinar_v4_colaboradores, que o sync espelha na
+  // nuvem. Como a hidratação escreve a lista da nuvem no localStorage ANTES do
+  // boot, getColaboradores() nunca mais cai no COLABORADORES_PADRAO em nenhuma
+  // instalação já usada. Sem esta migração a Priscila não apareceria em máquina
+  // nenhuma e nem conseguiria entrar (entrarColab exige nome já na lista).
+  //
+  // A marca fica numa chave afinar_v4_* (portanto sincronizada), então roda uma
+  // vez só no sistema todo, não uma vez por navegador. É isso que faz a exclusão
+  // manual pela tela de configurações continuar valendo: sem a marca na nuvem,
+  // todo boot re-adicionaria quem o gestor apagou de propósito.
+  //
+  // Aditiva de propósito: não mexe em quem já está na lista e NÃO chama
+  // distribuirMentores, porque reequilibrar trocaria o mentor de quem já tem
+  // reunião marcada no meio do ciclo.
+  if(!localStorage.getItem(MIGR_PRISCILA_KEY)){
+    const jaExiste = getColaboradores().some(c=>c.nome==="Priscila");
+    if(!jaExiste){
+      const padrao = COLABORADORES_PADRAO.find(c=>c.nome==="Priscila");
+      const l = getColaboradores();
+      l.push({...padrao});
+      setColaboradores(l);
+    }
+    localStorage.setItem(MIGR_PRISCILA_KEY, "1");
   }
 }
 function bootAfinar(){
