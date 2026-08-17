@@ -1356,17 +1356,8 @@ function mentorDoCiclo(nome, ciclo){
   const impar = mentorImparDe(c);
   return (ciclo % 2 === 1) ? impar : outroMentor(impar);   // ímpares (1,3) = escolhido; pares (2,4) = o outro
 }
-/* reuniões realizadas / reuniões que já deveriam ter ocorrido no ciclo (2 por mês, só meses já passados) */
-function reunioesCicloStats(nome, ano, ciclo){
-  let deveriam=0, realizadas=0;
-  mesesDoCiclo(ciclo).forEach(m=>{
-    const passou = (ano < CUR.ano) || (ano===CUR.ano && m <= CUR.mes);
-    if(!passou) return;
-    deveriam += REUNIOES_META_MES;
-    realizadas += reunioesFeitasDe(loadForm(nome, ano, m));
-  });
-  return { realizadas: realizadas, deveriam: deveriam };
-}
+/* a contagem por ciclo vive em reuniaoStatsColab (seção ESTATÍSTICAS DE
+   REUNIÃO), fonte única para o card do mentor e para o painel do gestor */
 
 /* =========================================================
    MATRIZ DE COMPETÊNCIAS
@@ -1519,6 +1510,11 @@ function novoRegistro(nome,ano,mes){
 ========================================================== */
 const REUNIOES_MAX = 5;
 const REUNIOES_META_MES = 2;   // dois encontros por mês, a cadência quinzenal
+// A régua de percentual é o CICLO INTEIRO, não o proporcional aos meses já
+// decorridos. Cada mentorado deve 6 encontros por ciclo (3 meses × 2), e o
+// número não muda no meio do trimestre: quem fez 1 em julho fez 1 de 6, não
+// "50% até agora". Denominador móvel dava leitura otimista e enganosa.
+const REUNIOES_META_CICLO = REUNIOES_META_MES * 3;   // 6 por ciclo
 /* Registro antigo, sem o campo, cai na contagem do formato anterior (reuniões
    marcadas como "realizada"). É leitura derivada, nunca escrita: nada é
    convertido, nada é apagado, e quem nunca marcou nada simplesmente lê zero. */
@@ -1681,34 +1677,35 @@ function mesRepresentanteDoCiclo(ciclo){ return mesesDoCiclo(ciclo)[0]; }
 
 /* =========================================================
    ESTATÍSTICAS DE REUNIÃO
-   % = soma dos contadores dos meses já decorridos / (2 por mês).
-   Mês futuro não entra na conta, e enquanto ninguém tiver mexido no contador
-   dessa pessoa o painel diz "Sem reuniões registradas" em vez de acusar 0%:
-   ausência de registro não é o mesmo que ausência de reunião.
+   A régua é sempre o CICLO em exibição, nunca o proporcional aos meses já
+   decorridos: cada mentorado deve 6 encontros no ciclo, e o mentor deve
+   (mentorados dele no ciclo × 6). Assim o número não infla no começo do
+   trimestre nem muda de sentido quando o mês vira.
+   Enquanto ninguém tiver mexido no contador, o painel diz "Sem reuniões
+   registradas" em vez de acusar 0%: ausência de registro não é ausência de
+   reunião.
 ========================================================== */
-function mesJaPassou(ano, mes){ return (ano < CUR.ano) || (ano === CUR.ano && mes <= CUR.mes); }
-function reuniaoStatsColab(nome){
-  let total=0, realizadas=0, temRegistro=false;
-  formsDe(nome).forEach(f=>{
-    if(!mesJaPassou(f.ano, f.mes)) return;
-    if(f.rec && typeof f.rec.reunioesFeitas === "number") temRegistro = true;
-    total += REUNIOES_META_MES;
-    realizadas += reunioesFeitasDe(f.rec);
-  });
-  return { realizadas: realizadas, total: total, temRegistro: temRegistro };
-}
-function reuniaoStatsMentor(mentor){
-  let total=0, realizadas=0, temRegistro=false;
-  allKeys().forEach(k=>{
-    let rec = null; try{ rec = JSON.parse(localStorage.getItem(k)); }catch(e){ return; }
-    if(!(rec && rec.nome && rec.mes)) return;
-    if(!mesJaPassou(rec.ano || CUR.ano, rec.mes)) return;
-    if(mentorDoCiclo(rec.nome, cicloDe(rec.mes))!==mentor) return;
-    if(typeof rec.reunioesFeitas === "number") temRegistro = true;
-    total += REUNIOES_META_MES;
+function reuniaoStatsColab(nome, ano, ciclo){
+  const a = ano || CUR.ano, c = ciclo || cicloDe(CUR.mes);
+  let realizadas=0, temRegistro=false;
+  mesesDoCiclo(c).forEach(m=>{
+    const rec = loadForm(nome, a, m);
+    if(rec && typeof rec.reunioesFeitas === "number") temRegistro = true;
     realizadas += reunioesFeitasDe(rec);
   });
-  return { realizadas: realizadas, total: total, temRegistro: temRegistro };
+  return { realizadas: realizadas, total: REUNIOES_META_CICLO, temRegistro: temRegistro };
+}
+function reuniaoStatsMentor(mentor, ano, ciclo){
+  const a = ano || CUR.ano, c = ciclo || cicloDe(CUR.mes);
+  const mentorados = colaboradoresDoMentorNoCiclo(mentor, c);
+  let realizadas=0, temRegistro=false;
+  mentorados.forEach(nome=>{
+    const s = reuniaoStatsColab(nome, a, c);
+    realizadas += s.realizadas;
+    if(s.temRegistro) temRegistro = true;
+  });
+  return { realizadas: realizadas, total: mentorados.length * REUNIOES_META_CICLO,
+           mentorados: mentorados.length, temRegistro: temRegistro };
 }
 function isoHoje(){
   return CUR.ano+"-"+String(new Date().getMonth()+1).padStart(2,"0")+"-"+String(new Date().getDate()).padStart(2,"0");
@@ -1939,14 +1936,17 @@ function setFiltro(f){
 }
 function renderMentorBarsTop(){
   const root = document.getElementById("mentor-bars-top");
-  let html = '<div class="mentor-bars-box"><div class="mentor-bars-head">Reuniões realizadas · visão geral</div>';
+  const cicloAtual = cicloDe(CUR.mes);
+  let html = '<div class="mentor-bars-box"><div class="mentor-bars-head">Reuniões realizadas · Ciclo '+cicloAtual+' · meta de '+REUNIOES_META_CICLO+' por mentorado</div>';
   ["Val","Luiz"].forEach(m=>{
-    const s = reuniaoStatsMentor(m);
+    const s = reuniaoStatsMentor(m, CUR.ano, cicloAtual);
     const pct = (s.temRegistro && s.total) ? Math.round(s.realizadas/s.total*100) : null;
     // a barra para em 100%, o número continua dizendo a verdade: com o contador
     // indo até 5 por mês e a meta em 2, dá pra passar de 100% legitimamente
     const track = pct===null ? "" : '<div class="mb-fill '+(pct>=80?"ok":"")+'" style="width:'+Math.min(100,pct)+'%"></div>';
-    const pctTxt = pct===null ? "Sem reuniões registradas" : pct+"% ("+s.realizadas+"/"+s.total+")";
+    const pctTxt = pct===null
+      ? (s.mentorados ? "Sem reuniões registradas" : "Nenhum mentorado neste ciclo")
+      : pct+"% ("+s.realizadas+" de "+s.total+", "+s.mentorados+" mentorados)";
     html += '<div class="meet-bar-row"><div class="mb-name">'+esc(m)+'</div>'+
       '<div class="mb-track">'+track+'</div>'+
       '<div class="mb-pct">'+pctTxt+'</div></div>';
@@ -1973,9 +1973,11 @@ function renderCards(){
     mostrados++;
     const cargo = cargoMap[nome] || "";
     const mentorTxt = mentorAtual;
-    const rs = reuniaoStatsColab(nome);
+    const rs = reuniaoStatsColab(nome, CUR.ano, cicloAtual);
     const rsPct = (rs.temRegistro && rs.total) ? Math.round(rs.realizadas/rs.total*100) : null;
-    const rsTxt = rsPct===null ? "Sem reuniões registradas" : rsPct+"% de reuniões realizadas";
+    // mostra a fração junto: "17% do ciclo (1 de 6)" não deixa dúvida sobre a régua
+    const rsTxt = rsPct===null ? "Sem reuniões registradas"
+      : rsPct+"% do ciclo ("+rs.realizadas+" de "+rs.total+")";
     const rsCls = rsPct===null ? "" : (rsPct>=80?"ok":"low");
     const nMes = reunioesDoMes(nome, CUR.ano, CUR.mes);
     const mesTxt = nMes+" de "+REUNIOES_META_MES;
@@ -2118,11 +2120,12 @@ function exportarCalendarioPDF(){
         + cels.map(v=>'<td>'+v+'</td>').join("")
         + '<td><b>'+tot+'</b></td></tr>';
     }).join("");
-    const meta = meses.filter(m=>mesJaPassou(CAL_ANO, m)).length * REUNIOES_META_MES * nomes.length;
+    const meta = nomes.length * REUNIOES_META_CICLO;
+    const pct = meta ? Math.round(somaGeral/meta*100) : 0;
     root.innerHTML = '<h2>'+titulo+'</h2>'
-      + '<p>'+somaGeral+' reunião(ões) registrada(s)'
-      + (meta ? ', de '+meta+' esperada(s) nos meses já decorridos' : '')
-      + '. Meta de '+REUNIOES_META_MES+' encontros por mês.</p>'
+      + '<p>'+somaGeral+' de '+meta+' reuniões do ciclo ('+pct+'%). '
+      + 'Meta de '+REUNIOES_META_CICLO+' por mentorado no ciclo, '
+      + REUNIOES_META_MES+' por mês, com '+nomes.length+' mentorado(s).</p>'
       + '<table><thead><tr><th>Colaborador</th>'
       + meses.map(m=>'<th>'+MESES[m-1]+'</th>').join("")
       + '<th>Total</th></tr></thead><tbody>'+rows+'</tbody></table>';
@@ -2234,13 +2237,12 @@ function renderMentorBox(){
   if(!box || !EDITING) return;
   const ciclo = cicloDe(CUR.mes);                 // ciclo atual do calendário
   const info = MENTOR_INFO[mentorDoCiclo(EDITING, ciclo)];
-  const st = reunioesCicloStats(EDITING, ANO_VISIVEL, ciclo);
-  const temBase = st.deveriam > 0;
-  const pct = temBase ? Math.round(st.realizadas/st.deveriam*100) : 0;
+  const st = reuniaoStatsColab(EDITING, ANO_VISIVEL, ciclo);
+  const pct = Math.round(st.realizadas/st.total*100);
   const primeiro = (EDITING||"").split(" ")[0];
   const frase = (ROLE==="gestor") ? ("O mentor de "+esc(primeiro)+" neste ciclo") : "O seu mentor neste ciclo";
-  const countTxt = temBase ? (st.realizadas+" de "+st.deveriam+" reuniões") : "ciclo ainda não começou";
-  const pctTxt = temBase ? (pct+"%") : "—";
+  const countTxt = st.realizadas+" de "+st.total+" reuniões";
+  const pctTxt = pct+"%";
   box.innerHTML =
       '<div class="mentor-eyebrow">'+frase+'</div>'
     + '<div class="mentor-card">'
@@ -2250,7 +2252,7 @@ function renderMentorBox(){
     +     '<div class="mentor-meet">'
     +       '<div class="mm-top"><span class="mm-pct">'+pctTxt+'</span><span class="mm-count">'+countTxt+'</span></div>'
     +       '<div class="mm-track"><div class="mm-fill" style="width:'+Math.min(100,pct)+'%"></div></div>'
-    +       '<div class="mm-cap">realizadas neste ciclo (2 por mês)</div>'
+    +       '<div class="mm-cap">realizadas no ciclo (meta de '+REUNIOES_META_CICLO+', '+REUNIOES_META_MES+' por mês)</div>'
     +     '</div>'
     +   '</div>'
     +   '<div class="mentor-photo"><img src="'+info.img+'" alt="'+esc(info.nome)+'"></div>'
