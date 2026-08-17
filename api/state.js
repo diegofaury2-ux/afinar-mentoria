@@ -10,6 +10,8 @@
 //   (ment/mentor/roteiro/reunioes/mentCompleto) são mesclados usando as marcas de
 //   tempo selfUpdatedAt / mentUpdatedAt, para que salvar de um lado nunca apague
 //   o que o outro lado gravou no mesmo mês.
+//   Existe ainda uma TERCEIRA via, para o que os dois lados editam: o contador
+//   reunioesFeitas, com carimbo próprio reunioesFeitasAt (17/08/2026).
 
 const REDIS_KEY = process.env.REDIS_KEY || 'afinar:state:v1';
 function kvUrl(){ return process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL; }
@@ -37,6 +39,11 @@ async function readState(){
 const isRecordKey = k => k.indexOf('afinar_v4::') === 0;
 const COLAB_FIELDS = ['funcao','data','self','pdi','selfCompleto'];
 const GEST_FIELDS  = ['ment','mentor','roteiro','reunioes','mentCompleto'];
+// Terceira via: campos que os DOIS lados editam (o contador de reuniões do mês).
+// Não podem entrar em COLAB_FIELDS nem em GEST_FIELDS, senão a gravação de um
+// dos lados seria descartada em silêncio pelo merge do outro. Carimbo próprio
+// (reunioesFeitasAt), decidido só entre si: vence quem salvou por último.
+const AMBOS_FIELDS = ['reunioesFeitas'];
 
 // serializa um objeto com as chaves de topo ordenadas (saída determinística,
 // para o guard de no-op detectar valores idênticos)
@@ -62,6 +69,16 @@ function mergeRecord(oldStr, newStr){
   const gestSrc = (nM >= oM) ? n : o;
   GEST_FIELDS.forEach(f => { if(f in gestSrc) res[f] = gestSrc[f]; });
   res.mentUpdatedAt = Math.max(oM, nM);
+
+  // Contador de reuniões: aditivo. Registro sem reunioesFeitasAt (todos os que
+  // já existem hoje) tem oR = nR = 0, cai no lado novo e sai igual ao que
+  // entrou, então o merge segue se comportando exatamente como antes. E um
+  // cliente antigo, que reenvia o contador com o carimbo velho que leu, perde
+  // a disputa pro valor mais recente em vez de sobrescrevê-lo.
+  const oR = o.reunioesFeitasAt||0, nR = n.reunioesFeitasAt||0;
+  const ambosSrc = (nR >= oR) ? n : o;
+  AMBOS_FIELDS.forEach(f => { if(f in ambosSrc) res[f] = ambosSrc[f]; });
+  res.reunioesFeitasAt = Math.max(oR, nR);
 
   res.updatedAt = Math.max(o.updatedAt||0, n.updatedAt||0);
   return canon(res);

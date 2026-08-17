@@ -40,6 +40,19 @@
 // (afinar_sync_outbox, que não sobe pra nuvem) e é RETOMADA no boot: a alteração
 // que não subiu sobrevive ao recarregamento, é protegida da hidratação e sobe
 // sozinha quando o servidor volta.
+//
+// AJUSTE EM 17/08/2026 — o selo gritava cedo demais. Uma ÚNICA tentativa
+// falhada (oscilação de rede, cold start da Vercel, fetch cancelado pelo
+// navegador ao trocar de aba) já pintava "Falha ao salvar" em vermelho, mesmo
+// com a retentativa engatilhada e o dado seguro no localStorage e na outbox.
+// Medido no harness: saving -> error -> 3s -> saving -> idle, com o dado
+// chegando ao servidor. Alarme para uma condição que ainda não era falha.
+// Agora o vermelho exige falha TEIMOSA (3 tentativas seguidas ou 20s sem
+// confirmação) e nunca vem de envio feito com a página saindo do ar, porque aí
+// quem cancela o fetch é o navegador. Aba em segundo plano continua contando
+// normal: ela executa fetch, então falha ali é falha de verdade e tem que
+// estar à vista quando a pessoa voltar. O texto também mudou: o problema é
+// conexão, não perda.
 (function () {
   const API = '/api/state';
   const PREFIX = 'afinar_v4';          // toda chave do app começa com isto
@@ -56,6 +69,17 @@
   let failCount = 0;                   // envios consecutivos que falharam
   let status = 'idle';                 // idle | saving | error
   const statusCbs = [];
+
+  // ── quando uma falha vira aviso vermelho ────────────────────────────────────
+  // Uma tentativa que falha NÃO é uma perda: a alteração já está no localStorage,
+  // está na fila persistente (outbox) e vai ser reenviada sozinha com backoff.
+  // Acusar "Falha ao salvar" no primeiro tropeço fazia o app gritar erro em
+  // oscilação de rede e cold start da Vercel, situações em que o dado chegava
+  // segundos depois. Agora o vermelho só aparece quando a falha é teimosa.
+  const FAIL_VISIBLE_AFTER = 3;        // tentativas seguidas antes de acusar
+  const FAIL_VISIBLE_MS = 20000;       // ou tempo sem confirmação do servidor
+  let firstFailAt = 0;                 // início da sequência atual de falhas
+  let unloading = false;               // página saindo do ar (pagehide/beforeunload)
 
   // chaves com alteração local que AINDA não foi confirmada pelo servidor.
   // Enquanto uma chave está aqui, a nuvem não pode apagá-la nem sobrescrevê-la.
@@ -179,7 +203,16 @@
       Object.keys(set).forEach(k => { if (!(k in pendingSet)) pendingSet[k] = set[k]; });
       del.forEach(k => pendingDel.add(k));
       failCount++;
-      setStatus('error');
+      if (!firstFailAt) firstFailAt = Date.now();
+      // A exceção vale só para a página SAINDO do ar (pagehide/beforeunload):
+      // ali o navegador cancela o fetch por projeto, e acusar erro seria
+      // culpar o servidor por algo que ele nem recebeu.
+      // Aba apenas em segundo plano NÃO entra aqui: ela executa fetch
+      // normalmente, então falha ali é falha de verdade e precisa aparecer
+      // quando a pessoa voltar. O caso do POST cancelado ao esconder a aba já
+      // está coberto pelo limiar: é uma falha só, não chega a pintar vermelho.
+      const teimosa = (failCount >= FAIL_VISIBLE_AFTER) || (Date.now() - firstFailAt >= FAIL_VISIBLE_MS);
+      setStatus((!unloading && teimosa) ? 'error' : 'saving');
     };
     const body = JSON.stringify({ set: set, del: del });
     const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body };
@@ -202,7 +235,7 @@
         const aindaPendente = k => (k in pendingSet) || pendingDel.has(k);
         Object.keys(set).forEach(k => { if (!aindaPendente(k)) unsynced.delete(k); });
         del.forEach(k => { if (!aindaPendente(k)) unsynced.delete(k); });
-        failCount = 0;
+        failCount = 0; firstFailAt = 0;
         if (!anyPending()) setStatus('idle');
       })
       .catch(requeue)
@@ -299,7 +332,10 @@
   // O sync se desenha sozinho: o Afinar tem topbar em 6 telas diferentes e um
   // selo flutuante evita ter que mexer em todas. "Salvo" some depois de 4s;
   // "Salvando" e "Falha" ficam à vista, e clicar em "Falha" tenta de novo.
-  const SYNC_LABEL = { idle: 'Salvo na nuvem', saving: 'Salvando…', error: 'Falha ao salvar' };
+  // O rótulo vermelho não diz "Falha ao salvar": nada foi perdido, a alteração
+  // está guardada no navegador e na fila. O que existe é ausência de conexão
+  // com a nuvem, e é isso que ele fala.
+  const SYNC_LABEL = { idle: 'Salvo na nuvem', saving: 'Salvando…', error: 'Sem conexão com a nuvem, tentando de novo' };
   let badgeEl = null, badgeHideTimer = null;
   function ensureBadge() {
     if (badgeEl) return badgeEl;
@@ -339,8 +375,8 @@
     if (st === 'error') {
       el.style.background = '#d0104a'; el.style.color = '#fff';
       el.style.cursor = 'pointer'; el.style.pointerEvents = 'auto';
-      el.title = 'Não foi possível salvar na nuvem. Clique para tentar de novo.';
-      el.onclick = () => { failCount = 0; flushNow(); };
+      el.title = 'Suas respostas estão guardadas neste navegador e serão enviadas assim que a conexão voltar. Clique para tentar agora.';
+      el.onclick = () => { failCount = 0; firstFailAt = 0; flushNow(); };
     } else {
       el.style.background = st === 'saving' ? '#3a3a36' : '#c4e01a';
       el.style.color = st === 'saving' ? '#f5f2eb' : '#0a0a0a';
@@ -360,7 +396,7 @@
     status() { return status; },
     pending() { return hasPending(); },
     // força uma tentativa imediata (botão "tentar de novo")
-    retry() { failCount = 0; flushNow(); },
+    retry() { failCount = 0; firstFailAt = 0; flushNow(); },
     flush() { flushNow(); },
     // espera o que está pendente subir. Devolve { pending:boolean } para quem
     // precisa saber se pode seguir (ex.: confirmar um envio definitivo).
@@ -402,11 +438,27 @@
 
   // ── flush ao sair/minimizar ──────────────────────────────────────────────────
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'hidden') flushNow();
-    else checkRemote();
+    if (document.visibilityState === 'hidden') { flushNow(); return; }
+    // Voltou pra aba. Se ficou coisa na fila, tenta agora em vez de esperar o
+    // backoff acumulado. Zera o contador só quando ainda NÃO estamos acusando
+    // falha: se o selo já está vermelho, a falha é real e não pode ser
+    // apagada da tela só porque a pessoa trocou de aba.
+    if (anyPending()) {
+      if (status !== 'error') { failCount = 0; firstFailAt = 0; }
+      schedulePush();
+    }
+    checkRemote();
   });
-  window.addEventListener('pagehide', flushNow);
+  window.addEventListener('pagehide', function () { unloading = true; flushNow(); });
   window.addEventListener('beforeunload', function (e) {
-    if (hasPending()) { flushNow(); e.preventDefault(); e.returnValue = ''; }
+    if (hasPending()) {
+      unloading = true; flushNow();
+      // a pessoa pode clicar em "Cancelar" e continuar na página; se ela ficar,
+      // este timer roda e o sync volta a poder acusar falha de verdade
+      setTimeout(function () { unloading = false; }, 4000);
+      e.preventDefault(); e.returnValue = '';
+    }
   });
+  // volta do bfcache (voltar/avançar do navegador): a página está viva de novo
+  window.addEventListener('pageshow', function () { unloading = false; });
 })();
