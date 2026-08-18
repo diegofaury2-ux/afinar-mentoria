@@ -1060,6 +1060,8 @@
              onkeydown="if(event.key==='Enter')onAdicionarColaborador()">
       <input type="text" id="novo-colab-cargo" placeholder="Cargo (opcional)"
              onkeydown="if(event.key==='Enter')onAdicionarColaborador()">
+      <input type="email" id="novo-colab-email" placeholder="E-mail (opcional)"
+             onkeydown="if(event.key==='Enter')onAdicionarColaborador()">
       <button class="btn btn-ghost" onclick="onAdicionarColaborador()">+ Adicionar</button>
     </div>
     <div id="colab-list"></div>
@@ -1067,6 +1069,14 @@
     <div style="margin-top:22px">
       <button class="btn btn-ghost" onclick="sortearMentores()">🎲 Sortear mentores</button>
       <p class="save-hint" style="margin-top:8px">Distribui os colaboradores aleatoriamente entre Val e Luiz, metade para cada nos ciclos ímpares (e o inverso nos pares). Em lista de tamanho ímpar, o Luiz fica com um a mais. Feito para usar uma única vez.</p>
+    </div>
+
+    <h3 style="margin-top:46px">Notificações por e-mail</h3>
+    <p class="save-hint" style="margin-top:6px">Quando um colaborador conclui a autoavaliação (o botão fica verde), o mentor responsável pelo ciclo recebe um e-mail avisando. Cadastre o e-mail de cada colaborador na lista acima (botão "Editar") e o e-mail dos dois mentores aqui.</p>
+    <div class="add-colab-row" style="margin-top:10px">
+      <input type="email" id="mentor-email-Val" placeholder="E-mail do Val">
+      <input type="email" id="mentor-email-Luiz" placeholder="E-mail do Luiz">
+      <button class="btn btn-ghost" onclick="onSalvarEmailsMentores()">Salvar e-mails dos mentores</button>
     </div>
 
     <h3 style="margin-top:46px">Backup</h3>
@@ -1326,6 +1336,19 @@ function getColaboradores(){
   return list;
 }
 function setColaboradores(list){ localStorage.setItem(COLAB_KEY, JSON.stringify(list)); }
+// e-mails dos dois sócios-mentores (Val/Luiz), pra aviso de autoavaliação concluída
+const MENTOR_EMAIL_KEY = "afinar_v4_mentor_emails";
+function getMentorEmails(){
+  try{ const p = JSON.parse(localStorage.getItem(MENTOR_EMAIL_KEY) || "{}"); return (p && typeof p==="object") ? p : {}; }
+  catch(e){ return {}; }
+}
+function setMentorEmails(map){ localStorage.setItem(MENTOR_EMAIL_KEY, JSON.stringify(map)); }
+function onSalvarEmailsMentores(){
+  const val = document.getElementById("mentor-email-Val").value.trim();
+  const luiz = document.getElementById("mentor-email-Luiz").value.trim();
+  setMentorEmails({ Val: val, Luiz: luiz });
+  toast("E-mails dos mentores salvos");
+}
 function getCargo(nome){
   const c = getColaboradores().find(c=>c.nome===nome);
   return c ? (c.cargo||"") : "";
@@ -2734,6 +2757,9 @@ function fecharSettings(){ renderCards(); showScreen("gestor"); }
 
 function renderSettings(){
   refreshColabDatalist();
+  const memails = getMentorEmails();
+  const elMV = document.getElementById("mentor-email-Val"); if(elMV) elMV.value = memails.Val||"";
+  const elML = document.getElementById("mentor-email-Luiz"); if(elML) elML.value = memails.Luiz||"";
   const list = getColaboradores();
   const root = document.getElementById("colab-list");
   root.innerHTML = "";
@@ -2742,7 +2768,7 @@ function renderSettings(){
     row.className = "colab-row";
     const nameDiv = document.createElement("div");
     nameDiv.className = "cr-name";
-    nameDiv.innerHTML = esc(colab.nome) + (colab.cargo ? ' <span class="cr-cargo">'+esc(colab.cargo)+'</span>' : '');
+    nameDiv.innerHTML = esc(colab.nome) + (colab.cargo ? ' <span class="cr-cargo">'+esc(colab.cargo)+'</span>' : '') + (colab.email ? ' <span class="cr-cargo">'+esc(colab.email)+'</span>' : '');
     const actions = document.createElement("div");
     actions.className = "cr-actions";
     const btnEdit = document.createElement("button");
@@ -2806,8 +2832,10 @@ function iniciarEdicaoColab(row, colab){
   inpNome.type = "text"; inpNome.className = "cr-edit-input"; inpNome.value = colab.nome; inpNome.placeholder = "Nome";
   const inpCargo = document.createElement("input");
   inpCargo.type = "text"; inpCargo.className = "cr-edit-input"; inpCargo.value = colab.cargo||""; inpCargo.placeholder = "Cargo";
+  const inpEmail = document.createElement("input");
+  inpEmail.type = "email"; inpEmail.className = "cr-edit-input"; inpEmail.value = colab.email||""; inpEmail.placeholder = "E-mail";
   const wrapName = document.createElement("div");
-  wrapName.className = "cr-edit-fields"; wrapName.appendChild(inpNome); wrapName.appendChild(inpCargo);
+  wrapName.className = "cr-edit-fields"; wrapName.appendChild(inpNome); wrapName.appendChild(inpCargo); wrapName.appendChild(inpEmail);
   const actions = document.createElement("div");
   actions.className = "cr-actions";
   const btnSave = document.createElement("button");
@@ -2815,9 +2843,10 @@ function iniciarEdicaoColab(row, colab){
   btnSave.onclick = ()=>{
     const novoNome = inpNome.value.trim();
     const novoCargo = inpCargo.value.trim();
+    const novoEmail = inpEmail.value.trim();
     if(!novoNome){ toast("Digite um nome."); return; }
     if(novoNome!==colab.nome && getColaboradores().some(c=>c.nome===novoNome)){ toast("Já existe um colaborador com esse nome."); return; }
-    renomearColaborador(colab.nome, novoNome, novoCargo);
+    renomearColaborador(colab.nome, novoNome, novoCargo, novoEmail);
     renderSettings();
     toast("Colaborador atualizado");
   };
@@ -2828,7 +2857,7 @@ function iniciarEdicaoColab(row, colab){
   row.appendChild(wrapName); row.appendChild(actions);
   inpNome.focus();
 }
-function renomearColaborador(nomeAntigo, novoNome, novoCargo){
+function renomearColaborador(nomeAntigo, novoNome, novoCargo, novoEmail){
   allKeys().forEach(k=>{
     const p = parseKey(k);
     if(p.nome===nomeAntigo){
@@ -2840,7 +2869,10 @@ function renomearColaborador(nomeAntigo, novoNome, novoCargo){
   });
   const list = getColaboradores();
   const idx = list.findIndex(c=>c.nome===nomeAntigo);
-  if(idx>-1) list[idx] = {nome:novoNome, cargo:novoCargo, mentorImpar:list[idx].mentorImpar}; else list.push({nome:novoNome, cargo:novoCargo});
+  const atual = idx>-1 ? list[idx] : {};
+  const novo = {nome:novoNome, cargo:novoCargo, mentorImpar:atual.mentorImpar};
+  if(novoEmail) novo.email = novoEmail;
+  if(idx>-1) list[idx] = novo; else list.push(novo);
   setColaboradores(list);
 }
 function pedirExclusaoColaborador(nome){
@@ -2858,12 +2890,15 @@ function excluirColaborador(nome){
 function onAdicionarColaborador(){
   const inpN = document.getElementById("novo-colab-nome");
   const inpC = document.getElementById("novo-colab-cargo");
+  const inpE = document.getElementById("novo-colab-email");
   const nome = inpN.value.trim();
   const cargo = inpC.value.trim();
+  const email = inpE.value.trim();
   if(!nome){ toast("Digite um nome."); return; }
   if(getColaboradores().some(c=>c.nome===nome)){ toast("Colaborador já existe."); return; }
-  const list = getColaboradores(); list.push({nome:nome, cargo:cargo}); setColaboradores(list);
-  inpN.value = ""; inpC.value = "";
+  const novo = {nome:nome, cargo:cargo}; if(email) novo.email = email;
+  const list = getColaboradores(); list.push(novo); setColaboradores(list);
+  inpN.value = ""; inpC.value = ""; inpE.value = "";
   renderSettings();
   toast("Colaborador adicionado");
 }

@@ -89,6 +89,67 @@ function stable(data){
   return JSON.stringify(Object.keys(data).sort().reduce((a,k)=>{a[k]=data[k];return a;}, {}));
 }
 
+// ---------------------------------------------------------------------------
+// AVISO POR E-MAIL AO MENTOR (18/08/2026)
+// Quando o registro de um colaborador vira selfCompleto:false -> true (ele
+// terminou a autoavaliação), o mentor do ciclo recebe um e-mail. Detectado
+// aqui no servidor (não no cliente) para disparar uma vez só, não importa de
+// qual dispositivo veio o salvamento nem quantas vezes o cliente reenvie.
+// Falha de e-mail NUNCA pode derrubar o salvamento do formulário: é só um
+// aviso, o dado já está seguro no Redis antes de tentar enviar.
+function parseRecordKey(k){
+  const rest = k.slice('afinar_v4::'.length);
+  const idx = rest.lastIndexOf('::');
+  if(idx < 0) return null;
+  const m = /^(\d{4})-(\d{2})$/.exec(rest.slice(idx+2));
+  if(!m) return null;
+  return { nome: rest.slice(0, idx), ano: Number(m[1]), mes: Number(m[2]) };
+}
+function safeParse(str, fallback){
+  if(str == null) return fallback;
+  try{ const p = JSON.parse(str); return (p == null) ? fallback : p; }catch{ return fallback; }
+}
+// mesma regra do app (index.html: mentorImparDe/outroMentor/mentorDoCiclo):
+// mentorImpar cobre os ciclos 1 e 3, o outro mentor cobre os ciclos 2 e 4.
+function mentorDoCicloServer(colaboradores, nome, mes){
+  const c = (colaboradores||[]).find(c => c && c.nome === nome);
+  const impar = (c && c.mentorImpar) || 'Val';
+  const outro = impar === 'Val' ? 'Luiz' : 'Val';
+  const ciclo = Math.ceil(Number(mes) / 3);
+  return (ciclo % 2 === 1) ? impar : outro;
+}
+async function enviarEmailResend(to, subject, text){
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM;
+  if(!apiKey || !from || !to) return;
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to: [to], subject, text })
+  });
+  if(!r.ok){ console.warn('[afinar] resend', r.status, await r.text().catch(()=>'')); }
+}
+// dispara (best-effort) o aviso pro mentor de UM registro que acabou de
+// completar a autoavaliação. `data` já é o estado MESCLADO pós-gravação.
+async function avisarAutoavaliacaoConcluida(key, data){
+  try{
+    const p = parseRecordKey(key);
+    if(!p) return;
+    const colaboradores = safeParse(data['afinar_v4_colaboradores'], []);
+    const mentorEmails = safeParse(data['afinar_v4_mentor_emails'], {});
+    const mentor = mentorDoCicloServer(colaboradores, p.nome, p.mes);
+    const email = mentorEmails && mentorEmails[mentor];
+    if(!email) return; // e-mail do mentor não cadastrado em Configurações: sem aviso
+    const appUrl = process.env.AFINAR_APP_URL || 'https://afinar-mentoria.vercel.app';
+    await enviarEmailResend(
+      email,
+      'Autoavaliação concluída: ' + p.nome,
+      p.nome + ' terminou de preencher a autoavaliação de desempenho (ciclo ' + Math.ceil(p.mes/3) + ', ' + p.ano + ').\n\n' +
+      'Acesse o painel do mentor para avaliar os mesmos itens: ' + appUrl
+    );
+  }catch(e){ console.warn('[afinar] aviso mentor', e); }
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control','no-store');
   if(!kvUrl() || !kvToken()) return res.status(500).json({ error:'storage_not_configured' });
@@ -109,9 +170,14 @@ module.exports = async (req, res) => {
       const data = Object.assign({}, cur.data);
       const before = stable(data);
 
+      const paraAvisar = []; // chaves de registro que viraram selfCompleto:true agora
       Object.keys(set).forEach(k => {
         const nv = set[k];
-        if(isRecordKey(k)) data[k] = mergeRecord(data[k], typeof nv==='string' ? nv : JSON.stringify(nv));
+        if(isRecordKey(k)){
+          const eraCompleto = !!safeParse(data[k], {}).selfCompleto;
+          data[k] = mergeRecord(data[k], typeof nv==='string' ? nv : JSON.stringify(nv));
+          if(!eraCompleto && safeParse(data[k], {}).selfCompleto) paraAvisar.push(k);
+        }
         else data[k] = (typeof nv==='string' ? nv : JSON.stringify(nv));
       });
       del.forEach(k => { delete data[k]; });
@@ -121,6 +187,9 @@ module.exports = async (req, res) => {
       }
       const nv = (cur.v||0) + 1;
       await redis(['SET', REDIS_KEY, JSON.stringify({ v:nv, data })]);
+      // dado já está seguro no Redis; o aviso por e-mail vem depois e nunca
+      // pode fazer a resposta do salvamento falhar (ver avisarAutoavaliacaoConcluida)
+      await Promise.all(paraAvisar.map(k => avisarAutoavaliacaoConcluida(k, data)));
       return res.status(200).json({ ok:true, v:nv });
     }
     res.status(405).json({ error:'method_not_allowed' });
