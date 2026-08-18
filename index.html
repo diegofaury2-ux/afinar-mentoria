@@ -1072,12 +1072,34 @@
     </div>
 
     <h3 style="margin-top:46px">Notificações por e-mail</h3>
-    <p class="save-hint" style="margin-top:6px">Quando um colaborador conclui a autoavaliação (o botão fica verde), o mentor responsável pelo ciclo recebe um e-mail avisando. Cadastre o e-mail de cada colaborador na lista acima (botão "Editar") e o e-mail dos dois mentores aqui.</p>
+
+    <h4 style="margin-top:22px;margin-bottom:4px">1. Aviso ao mentor, quando o colaborador conclui</h4>
+    <p class="save-hint" style="margin-top:0">Quando um colaborador conclui a autoavaliação (o botão fica verde), o e-mail vai só para o mentor responsável por ele naquele ciclo — quem é do Val cai no e-mail do Val, quem é do Luiz cai no e-mail do Luiz, nunca os dois juntos. Cadastre o e-mail de cada colaborador na lista acima (botão "Editar") e o e-mail dos dois mentores aqui.</p>
     <div class="add-colab-row" style="margin-top:10px">
       <input type="email" id="mentor-email-Val" placeholder="E-mail do Val">
       <input type="email" id="mentor-email-Luiz" placeholder="E-mail do Luiz">
       <button class="btn btn-ghost" onclick="onSalvarEmailsMentores()">Salvar e-mails dos mentores</button>
     </div>
+
+    <h4 style="margin-top:32px;margin-bottom:4px">2. Aviso ao colaborador, quando o mentor conclui</h4>
+    <p class="save-hint" style="margin-top:0">Automático e inverso ao item 1: quando o mentor termina de avaliar alguém, essa pessoa recebe um e-mail. Não precisa configurar nada aqui além do e-mail do próprio colaborador, na lista acima — sem e-mail cadastrado, o aviso simplesmente não sai.</p>
+
+    <h4 style="margin-top:32px;margin-bottom:4px">3. Lembrete de prazo (datas manuais)</h4>
+    <p class="save-hint" style="margin-top:0">Como a autoavaliação é por ciclo (trimestral), você escolhe manualmente as datas do ano em que o lembrete deve sair — não é uma recorrência automática todo mês. Em cada data escolhida, quem ainda não enviou a autoavaliação do ciclo atual recebe um e-mail com o prazo que você definir.</p>
+    <div class="add-colab-row" style="margin-top:10px;align-items:center">
+      <label style="display:flex;align-items:center;gap:8px;flex:0 0 auto;color:var(--white);font-size:.9rem">
+        <input type="checkbox" id="lembrete-ativo" onchange="onToggleLembreteAtivo()" style="width:18px;height:18px">
+        Ativar lembretes automáticos
+      </label>
+      <input type="text" id="lembrete-prazo" placeholder='Frase do prazo (ex.: "até o fim do mês")' oninput="atualizarPreviaPrazo()">
+      <button class="btn btn-ghost" onclick="onSalvarPrazoLembrete()">Salvar texto do prazo</button>
+    </div>
+    <p class="save-hint" style="margin-top:2px">Só essa frase é sua — o resto do e-mail (saudação, nome, ciclo, link) é automático. Fica assim: <span id="lembrete-previa-prazo" style="color:var(--white)">"Prazo: até o fim do mês."</span></p>
+    <div class="add-colab-row" style="margin-top:10px">
+      <input type="date" id="lembrete-nova-data">
+      <button class="btn btn-ghost" onclick="onAdicionarDataLembrete()">+ Adicionar data</button>
+    </div>
+    <div id="lembrete-datas-list" style="margin-top:10px"></div>
 
     <h3 style="margin-top:46px">Backup</h3>
     <div style="margin-top:6px">
@@ -1348,6 +1370,70 @@ function onSalvarEmailsMentores(){
   const luiz = document.getElementById("mentor-email-Luiz").value.trim();
   setMentorEmails({ Val: val, Luiz: luiz });
   toast("E-mails dos mentores salvos");
+}
+// lembrete de prazo (datas manuais, ciclo é trimestral): {ativo,
+// datas:["AAAA-MM-DD",...], textoPrazo}. Lido pelo cron (api/lembrete-cron.js)
+// do lado do servidor, que dispara só nas datas exatas da lista.
+const LEMBRETES_KEY = "afinar_v4_lembretes";
+function getLembretesConfig(){
+  try{
+    const p = JSON.parse(localStorage.getItem(LEMBRETES_KEY) || "{}");
+    if(!p || typeof p !== "object") return { datas: [] };
+    if(!Array.isArray(p.datas)) p.datas = [];
+    return p;
+  }catch(e){ return { datas: [] }; }
+}
+function setLembretesConfig(cfg){ localStorage.setItem(LEMBRETES_KEY, JSON.stringify(cfg)); }
+function onToggleLembreteAtivo(){
+  const cfg = getLembretesConfig();
+  cfg.ativo = document.getElementById("lembrete-ativo").checked;
+  setLembretesConfig(cfg);
+  toast(cfg.ativo ? "Lembretes ativados" : "Lembretes desativados");
+}
+function onSalvarPrazoLembrete(){
+  const cfg = getLembretesConfig();
+  cfg.textoPrazo = document.getElementById("lembrete-prazo").value.trim();
+  setLembretesConfig(cfg);
+  toast("Texto do prazo salvo");
+}
+function atualizarPreviaPrazo(){
+  const el = document.getElementById("lembrete-previa-prazo");
+  if(!el) return;
+  const texto = document.getElementById("lembrete-prazo").value.trim() || "até o fim do mês";
+  el.textContent = '"Prazo: ' + texto + '."';
+}
+function onAdicionarDataLembrete(){
+  const inp = document.getElementById("lembrete-nova-data");
+  const data = inp.value; // "AAAA-MM-DD" (formato nativo do <input type=date>)
+  if(!data){ toast("Escolha uma data."); return; }
+  const cfg = getLembretesConfig();
+  if(cfg.datas.includes(data)){ toast("Essa data já está na lista."); return; }
+  cfg.datas.push(data);
+  cfg.datas.sort();
+  setLembretesConfig(cfg);
+  inp.value = "";
+  renderLembreteDatas();
+  toast("Data adicionada");
+}
+function onRemoverDataLembrete(data){
+  const cfg = getLembretesConfig();
+  cfg.datas = cfg.datas.filter(d => d !== data);
+  setLembretesConfig(cfg);
+  renderLembreteDatas();
+  toast("Data removida");
+}
+function renderLembreteDatas(){
+  const root = document.getElementById("lembrete-datas-list");
+  if(!root) return;
+  const datas = getLembretesConfig().datas;
+  if(!datas.length){ root.innerHTML = '<p class="save-hint">Nenhuma data cadastrada ainda.</p>'; return; }
+  root.innerHTML = datas.map(d => {
+    const [ano,mes,dia] = d.split("-");
+    return '<span class="pill" style="display:inline-flex;align-items:center;gap:8px;margin:0 8px 8px 0">'
+      + dia + '/' + mes + '/' + ano
+      + ' <button class="btn btn-ghost sm" style="padding:2px 8px" onclick="onRemoverDataLembrete(\'' + d + '\')">×</button>'
+      + '</span>';
+  }).join("");
 }
 function getCargo(nome){
   const c = getColaboradores().find(c=>c.nome===nome);
@@ -2760,6 +2846,11 @@ function renderSettings(){
   const memails = getMentorEmails();
   const elMV = document.getElementById("mentor-email-Val"); if(elMV) elMV.value = memails.Val||"";
   const elML = document.getElementById("mentor-email-Luiz"); if(elML) elML.value = memails.Luiz||"";
+  const lcfg = getLembretesConfig();
+  const elLA = document.getElementById("lembrete-ativo"); if(elLA) elLA.checked = !!lcfg.ativo;
+  const elLP = document.getElementById("lembrete-prazo"); if(elLP) elLP.value = lcfg.textoPrazo||"";
+  atualizarPreviaPrazo();
+  renderLembreteDatas();
   const list = getColaboradores();
   const root = document.getElementById("colab-list");
   root.innerHTML = "";

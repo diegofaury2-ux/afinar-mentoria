@@ -5,5 +5,8 @@
     { "src": "/sync.js", "dest": "/sync.js" },
     { "handle": "filesystem" },
     { "src": "(.*)", "dest": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/lembrete-cron", "schedule": "0 12 * * *" }
   ]
 }

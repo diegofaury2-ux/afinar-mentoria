@@ -131,6 +131,9 @@ async function enviarEmailResend(to, subject, text){
 }
 // dispara (best-effort) o aviso pro mentor de UM registro que acabou de
 // completar a autoavaliação. `data` já é o estado MESCLADO pós-gravação.
+// Cada colaborador só tem UM mentor por ciclo (mentorDoCicloServer), então o
+// aviso já sai separado por natureza: quem é do Val cai no e-mail do Val,
+// quem é do Luiz cai no e-mail do Luiz — nunca os dois juntos.
 async function avisarAutoavaliacaoConcluida(key, data){
   try{
     const p = parseRecordKey(key);
@@ -148,6 +151,28 @@ async function avisarAutoavaliacaoConcluida(key, data){
       'Acesse o painel do mentor para avaliar os mesmos itens: ' + appUrl
     );
   }catch(e){ console.warn('[afinar] aviso mentor', e); }
+}
+// aviso INVERSO (18/08/2026): quando o MENTOR conclui a avaliação dele
+// (mentCompleto false->true), o colaborador recebe um e-mail. Mesmo
+// mecanismo, mesma garantia de disparo único, só troca quem é o destinatário
+// (o próprio colaborador, pelo e-mail cadastrado nele em afinar_v4_colaboradores).
+async function avisarMentorConcluiuAvaliacao(key, data){
+  try{
+    const p = parseRecordKey(key);
+    if(!p) return;
+    const colaboradores = safeParse(data['afinar_v4_colaboradores'], []);
+    const c = (colaboradores||[]).find(c => c && c.nome === p.nome);
+    const email = c && c.email;
+    if(!email) return; // colaborador sem e-mail cadastrado: sem aviso
+    const mentor = mentorDoCicloServer(colaboradores, p.nome, p.mes);
+    const appUrl = process.env.AFINAR_APP_URL || 'https://afinar-mentoria.vercel.app';
+    await enviarEmailResend(
+      email,
+      'Sua avaliação de desempenho foi concluída pelo mentor',
+      'Seu mentor (' + mentor + ') terminou de preencher a avaliação do ciclo ' + Math.ceil(p.mes/3) + ' (' + p.ano + ').\n\n' +
+      'Acesse o app pra ver o resultado: ' + appUrl
+    );
+  }catch(e){ console.warn('[afinar] aviso colaborador', e); }
 }
 
 module.exports = async (req, res) => {
@@ -170,13 +195,16 @@ module.exports = async (req, res) => {
       const data = Object.assign({}, cur.data);
       const before = stable(data);
 
-      const paraAvisar = []; // chaves de registro que viraram selfCompleto:true agora
+      const paraAvisarSelf = []; // chaves que viraram selfCompleto:true agora (avisa o mentor)
+      const paraAvisarMent = []; // chaves que viraram mentCompleto:true agora (avisa o colaborador)
       Object.keys(set).forEach(k => {
         const nv = set[k];
         if(isRecordKey(k)){
-          const eraCompleto = !!safeParse(data[k], {}).selfCompleto;
+          const antes = safeParse(data[k], {});
           data[k] = mergeRecord(data[k], typeof nv==='string' ? nv : JSON.stringify(nv));
-          if(!eraCompleto && safeParse(data[k], {}).selfCompleto) paraAvisar.push(k);
+          const depois = safeParse(data[k], {});
+          if(!antes.selfCompleto && depois.selfCompleto) paraAvisarSelf.push(k);
+          if(!antes.mentCompleto && depois.mentCompleto) paraAvisarMent.push(k);
         }
         else data[k] = (typeof nv==='string' ? nv : JSON.stringify(nv));
       });
@@ -189,7 +217,10 @@ module.exports = async (req, res) => {
       await redis(['SET', REDIS_KEY, JSON.stringify({ v:nv, data })]);
       // dado já está seguro no Redis; o aviso por e-mail vem depois e nunca
       // pode fazer a resposta do salvamento falhar (ver avisarAutoavaliacaoConcluida)
-      await Promise.all(paraAvisar.map(k => avisarAutoavaliacaoConcluida(k, data)));
+      await Promise.all([
+        ...paraAvisarSelf.map(k => avisarAutoavaliacaoConcluida(k, data)),
+        ...paraAvisarMent.map(k => avisarMentorConcluiuAvaliacao(k, data))
+      ]);
       return res.status(200).json({ ok:true, v:nv });
     }
     res.status(405).json({ error:'method_not_allowed' });
@@ -197,3 +228,11 @@ module.exports = async (req, res) => {
     res.status(502).json({ error:'storage_error', detail:String(e && e.message || e) });
   }
 };
+
+// reaproveitado pelo api/lembrete-cron.js, pra não duplicar a conexão com o
+// Redis nem o envio por Resend.
+module.exports.kvUrl = kvUrl;
+module.exports.kvToken = kvToken;
+module.exports.readState = readState;
+module.exports.safeParse = safeParse;
+module.exports.enviarEmailResend = enviarEmailResend;
