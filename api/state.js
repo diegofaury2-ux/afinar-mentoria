@@ -118,6 +118,27 @@ function mentorDoCicloServer(colaboradores, nome, mes){
   const ciclo = Math.ceil(Number(mes) / 3);
   return (ciclo % 2 === 1) ? impar : outro;
 }
+// monta o corpo em HTML a partir do texto simples (cada linha em branco vira
+// parágrafo) com um cabeçalho com a logo da hit.hammers. O `text` continua
+// sendo mandado junto como fallback (cliente de e-mail sem HTML, leitor de
+// tela, etc.) — nenhum dos dois textos das funções de aviso precisou mudar.
+function textoParaHtmlParagrafos(text){
+  return String(text).split('\n\n').map(par =>
+    '<p style="margin:0 0 16px;color:#1a1a1a;font-size:15px;line-height:1.5;white-space:pre-line">' +
+    par.replace(/(https?:\/\/\S+)/g, '<a href="$1" style="color:#0a7a3d;font-weight:600">$1</a>') +
+    '</p>'
+  ).join('');
+}
+function emailHtml(text){
+  const appUrl = process.env.AFINAR_APP_URL || 'https://afinar-mentoria.vercel.app';
+  const logoUrl = appUrl + '/assets/imagens/hithammers_logo_wordmark.png';
+  return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;border:1px solid #eee">'
+    + '<div style="padding:20px 24px;border-bottom:1px solid #eee">'
+    +   '<img src="' + logoUrl + '" alt="hit.hammers" height="18" style="height:18px;display:block" />'
+    + '</div>'
+    + '<div style="padding:24px">' + textoParaHtmlParagrafos(text) + '</div>'
+    + '</div>';
+}
 async function enviarEmailResend(to, subject, text){
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM;
@@ -125,7 +146,7 @@ async function enviarEmailResend(to, subject, text){
   const r = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: [to], subject, text })
+    body: JSON.stringify({ from, to: [to], subject, text, html: emailHtml(text) })
   });
   if(!r.ok){ console.warn('[afinar] resend', r.status, await r.text().catch(()=>'')); }
 }
