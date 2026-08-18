@@ -187,12 +187,17 @@ async function avisarMentorConcluiuAvaliacao(key, data){
     if(!email) return; // colaborador sem e-mail cadastrado: sem aviso
     const mentor = mentorDoCicloServer(colaboradores, p.nome, p.mes);
     const appUrl = process.env.AFINAR_APP_URL || 'https://afinar-mentoria.vercel.app';
-    await enviarEmailResend(
-      email,
-      'Sua avaliação de desempenho foi concluída pelo mentor',
-      'Seu mentor (' + mentor + ') terminou de preencher a avaliação do ciclo ' + Math.ceil(p.mes/3) + ' (' + p.ano + ').\n\n' +
-      'Acesse o app pra ver o resultado: ' + appUrl
-    );
+    const rec = safeParse(data[key], {});
+    // avaliação é CEGA: o gap só aparece quando os dois lados completam
+    // (rec.selfCompleto && rec.mentCompleto, mesma regra do index.html). Se o
+    // colaborador ainda não preencheu a própria autoavaliação, "veja o
+    // resultado" seria mentira — o e-mail vira um lembrete pra ele preencher.
+    const corpo = rec.selfCompleto
+      ? 'Seu mentor (' + mentor + ') terminou de preencher a avaliação do ciclo ' + Math.ceil(p.mes/3) + ' (' + p.ano + ').\n\n' +
+        'Acesse o app pra ver o resultado: ' + appUrl
+      : 'Seu mentor (' + mentor + ') já terminou de preencher a avaliação do ciclo ' + Math.ceil(p.mes/3) + ' (' + p.ano + '), mas falta a sua parte.\n\n' +
+        'Não esqueça de preencher sua autoavaliação para ver o resultado! Você deve preenchê-la em ' + appUrl;
+    await enviarEmailResend(email, 'Sua avaliação de desempenho foi concluída pelo mentor', corpo);
   }catch(e){ console.warn('[afinar] aviso colaborador', e); }
 }
 
